@@ -311,10 +311,16 @@ export const useFirebase = () => {
         return 'A janela de autenticação foi fechada antes de concluir o login.'
       case 'auth/operation-not-allowed':
         return 'Provedor de login não ativado no Firebase Console. Ative E-mail/Senha nas configurações do Firebase.'
-      case 'auth/network-request-failed':
-        return 'Falha de conexão com os servidores do Firebase. Verifique sua internet.'
+      case 'auth/unauthorized-domain':
+        return `Domínio não autorizado no Firebase. Acesse o Firebase Console > Authentication > Settings (Configurações) > Authorized domains (Domínios autorizados) e adicione o domínio da sua Vercel.`
+      case 'auth/popup-blocked':
+        return 'O pop-up de login do Google foi bloqueado pelo navegador. Permita pop-ups para este site.'
+      case 'auth/cancelled-popup-request':
+        return 'Tentativa de login cancelada.'
       default:
-        return 'Erro ao autenticar. Verifique suas credenciais ou a configuração do Firebase.'
+        return code 
+          ? `Erro ao autenticar (${code}). Verifique suas credenciais ou a configuração do Firebase.`
+          : 'Erro ao autenticar. Verifique suas credenciais ou a configuração do Firebase.'
     }
   }
 
