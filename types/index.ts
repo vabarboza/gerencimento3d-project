@@ -70,6 +70,8 @@ export interface PrintJob {
   hardwareCost: number // Insumos extras (ímãs, parafusos, cola, LED)
   notes?: string
   createdAt: string
+  status?: 'orcamento' | 'em_producao' | 'concluido' | 'cancelado'
+  isDeductedFromStock?: boolean
 }
 
 export interface JobCostBreakdown {

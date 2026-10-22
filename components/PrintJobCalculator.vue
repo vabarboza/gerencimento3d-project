@@ -16,6 +16,48 @@
         </div>
 
         <form @submit.prevent>
+          <!-- G-code / 3MF Drag & Drop Zone -->
+          <div 
+            id="slicer-drop-zone"
+            class="slicer-drop-zone"
+            :class="{ 'is-dragging': isDragging, 'has-file': lastParsedFile }"
+            @dragover.prevent="isDragging = true"
+            @dragleave.prevent="isDragging = false"
+            @drop.prevent="handleFileDrop"
+            @click="triggerFileInput"
+          >
+            <input 
+              ref="fileInputRef" 
+              type="file" 
+              accept=".gcode,.3mf,.zip" 
+              style="display: none;" 
+              @change="handleFileInputChange"
+            />
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+              <div style="display: flex; align-items: center; gap: 0.85rem;">
+                <div class="slicer-upload-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                  </svg>
+                </div>
+                <div>
+                  <div style="font-size: 0.875rem; font-weight: 700; color: var(--text-main);">
+                    {{ isParsingFile ? 'Lendo metadados do fatiador...' : lastParsedFile ? `Arquivo Carregado: ${lastParsedFile.fileName}` : 'Importar Arquivo G-code ou .3MF' }}
+                  </div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">
+                    {{ lastParsedFile ? `⚡ Detectado: ${lastParsedFile.slicer} • ${lastParsedFile.totalGrams}g • ${lastParsedFile.printTimeHours}h ${lastParsedFile.printTimeMinutes}m` : 'Arraste seu arquivo (Bambu, Orca, Prusa, Cura) para preenchimento automático' }}
+                  </div>
+                </div>
+              </div>
+
+              <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; pointer-events: none;">
+                {{ lastParsedFile ? 'Substituir' : 'Selecionar Arquivo' }}
+              </button>
+            </div>
+          </div>
+
           <!-- Job Title & Client -->
           <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 1rem; margin-bottom: 1.25rem;">
             <div class="form-group" style="margin-bottom: 0;">
@@ -120,6 +162,21 @@
             <div style="display: flex; justify-content: space-between; font-size: 0.775rem; color: var(--text-muted); padding-top: 0.35rem;">
               <span>Total de filamento: <strong class="font-mono text-gradient">{{ jobCostBreakdown.totalGrams }}g</strong></span>
               <span>Custo total filamento: <strong class="font-mono text-gradient-cyan">R$ {{ jobCostBreakdown.filamentCost.toFixed(2) }}</strong></span>
+            </div>
+          </div>
+
+          <!-- Low Stock Warning Alert if any filament doesn't have enough grams -->
+          <div v-if="stockWarnings.length > 0" id="alert-low-stock-job" style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: var(--radius-md); padding: 0.85rem 1rem; margin-bottom: 1.25rem; font-size: 0.825rem; color: var(--brand-amber); display: flex; align-items: flex-start; gap: 0.65rem;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px;">
+              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            <div>
+              <strong style="color: #fff;">Atenção ao estoque de carretéis:</strong>
+              <div v-for="(warn, idx) in stockWarnings" :key="idx" style="margin-top: 0.25rem; font-size: 0.8rem;">
+                • O carretel <strong>{{ warn.filamentName }}</strong> possui apenas <strong>{{ warn.availableG }}g</strong> restantes (faltam {{ warn.missingG }}g para esta peça).
+              </div>
             </div>
           </div>
 
@@ -381,8 +438,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { use3DStore } from '~/composables/use3DStore'
+import { parseSlicerFile, type ParsedGcodeResult } from '~/utils/gcodeParser'
 
 defineEmits<{
   (e: 'save-quote'): void
@@ -395,8 +453,94 @@ const {
   filaments, 
   settings, 
   jobCostBreakdown, 
-  getFilamentCostPerGram 
+  getFilamentCostPerGram,
+  checkStockAvailability
 } = use3DStore()
+
+// Slicer File (G-code / .3MF) drag & drop parser state
+const isDragging = ref(false)
+const isParsingFile = ref(false)
+const lastParsedFile = ref<ParsedGcodeResult | null>(null)
+const fileInputRef = ref<HTMLInputElement | null>(null)
+
+const triggerFileInput = () => {
+  fileInputRef.value?.click()
+}
+
+const processFile = async (file: File) => {
+  if (!file) return
+  isParsingFile.value = true
+  try {
+    const result = await parseSlicerFile(file)
+    lastParsedFile.value = result
+
+    // 1. Title Auto-detection
+    const cleanName = file.name
+      .replace(/\.(gcode|3mf|zip)$/i, '')
+      .replace(/[_-]/g, ' ')
+      .trim()
+    if (!activeJob.title || activeJob.title === 'Novo Projeto 3D') {
+      activeJob.title = cleanName.charAt(0).toUpperCase() + cleanName.slice(1)
+    }
+
+    // 2. Printing Time
+    activeJob.printTimeHours = result.printTimeHours
+    activeJob.printTimeMinutes = result.printTimeMinutes
+
+    // 3. Filaments weight & multi-color AMS support
+    if (result.filamentsGrams && result.filamentsGrams.length > 0) {
+      result.filamentsGrams.forEach((grams, idx) => {
+        if (idx < activeJob.filaments.length) {
+          activeJob.filaments[idx].grams = grams
+        } else {
+          // If piece has more spools than rows, append row using available filaments
+          const fil = filaments[idx % filaments.length] || filaments[0]
+          if (fil) {
+            activeJob.filaments.push({
+              filamentId: fil.id,
+              grams: grams
+            })
+          }
+        }
+      })
+      // If active job had more rows than slicer used, trim excess
+      if (activeJob.filaments.length > result.filamentsGrams.length) {
+        activeJob.filaments.splice(result.filamentsGrams.length)
+      }
+    } else if (result.totalGrams > 0) {
+      if (activeJob.filaments.length > 0) {
+        activeJob.filaments[0].grams = result.totalGrams
+      }
+    }
+  } catch (err) {
+    console.error('Erro ao ler arquivo do fatiador:', err)
+  } finally {
+    isParsingFile.value = false
+    if (fileInputRef.value) fileInputRef.value.value = ''
+  }
+}
+
+const handleFileInputChange = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files[0]) {
+    processFile(target.files[0])
+  }
+}
+
+const handleFileDrop = (event: DragEvent) => {
+  isDragging.value = false
+  if (event.dataTransfer?.files && event.dataTransfer.files[0]) {
+    processFile(event.dataTransfer.files[0])
+  }
+}
+
+// Low Stock Warnings for current job
+const stockWarnings = computed(() => {
+  if (typeof checkStockAvailability === 'function') {
+    return checkStockAvailability(activeJob.filaments)
+  }
+  return []
+})
 
 const selectedPrinter = computed(() => {
   return printers.find(p => p.id === activeJob.printerId) || printers[0]

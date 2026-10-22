@@ -804,3 +804,75 @@ select.input-control option {
     padding: 1rem;
   }
 }
+
+/* Slicer Drop Zone Styles */
+.slicer-drop-zone {
+  border: 2px dashed rgba(0, 240, 255, 0.35);
+  background: rgba(0, 240, 255, 0.03);
+  border-radius: var(--radius-md);
+  padding: 0.9rem 1.15rem;
+  margin-bottom: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.slicer-drop-zone:hover,
+.slicer-drop-zone.is-dragging {
+  border-color: var(--brand-cyan);
+  background: rgba(0, 240, 255, 0.08);
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.slicer-drop-zone.has-file {
+  border-color: rgba(16, 185, 129, 0.5);
+  background: rgba(16, 185, 129, 0.06);
+}
+
+.slicer-upload-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: rgba(0, 240, 255, 0.12);
+  color: var(--brand-cyan);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.slicer-drop-zone:hover .slicer-upload-icon {
+  transform: scale(1.08);
+}
+
+.slicer-drop-zone.has-file .slicer-upload-icon {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--brand-emerald);
+}
+
+/* Quote Status Badges */
+.badge-status-orcamento {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.badge-status-em_producao {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.badge-status-concluido {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.badge-status-cancelado {
+  background: rgba(244, 63, 94, 0.15);
+  color: #fb7185;
+  border: 1px solid rgba(244, 63, 94, 0.3);
+}
+

@@ -30,3 +30,4 @@ export { setInterval } from '#app/compat/interval';
 export { defineLazyHydrationComponent } from '#app/composables/lazy-hydration';
 export { use3DStore } from '../composables/use3DStore';
 export { useFirebase } from '../composables/useFirebase';
+export { extractGcodeMetadata, parseSlicerFile, ParsedGcodeResult } from '../utils/gcodeParser';

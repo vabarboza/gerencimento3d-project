@@ -103,6 +103,9 @@ export const useFirebase = () => {
           } else {
             currentUser.value = null
           }
+        }, (error) => {
+          console.error('Auth state change error:', error)
+          isLoadingAuth.value = false
         })
       } catch (err: any) {
         console.error('Firebase initialization error:', err)

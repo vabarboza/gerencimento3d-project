@@ -91,6 +91,50 @@
           <p v-if="q.notes" style="font-size: 0.775rem; color: var(--text-dim); margin-bottom: 0.85rem; font-style: italic;">
             "{{ q.notes }}"
           </p>
+
+          <!-- Status & Stock Control Bar -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; padding: 0.5rem 0.75rem; background: rgba(255, 255, 255, 0.03); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); gap: 0.5rem; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span style="font-size: 0.75rem; color: var(--text-dim);">Status:</span>
+              <select 
+                :value="q.status || 'orcamento'" 
+                class="input-control" 
+                style="padding: 0.2rem 0.5rem; font-size: 0.75rem; width: auto; height: auto;"
+                @change="handleStatusChange(q.id, ($event.target as HTMLSelectElement).value as any)"
+              >
+                <option value="orcamento">📝 Orçamento</option>
+                <option value="em_producao">⚙️ Em Produção</option>
+                <option value="concluido">✅ Concluído (Baixa Estoque)</option>
+                <option value="cancelado">❌ Cancelado</option>
+              </select>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.725rem;">
+              <span v-if="q.isDeductedFromStock" style="color: var(--brand-emerald); display: flex; align-items: center; gap: 0.25rem;">
+                ✓ Baixa no estoque efetuada
+              </span>
+              <button 
+                v-if="!q.isDeductedFromStock"
+                type="button"
+                class="btn btn-secondary btn-sm"
+                style="padding: 0.2rem 0.5rem; font-size: 0.7rem; border-color: rgba(16, 185, 129, 0.4); color: var(--brand-emerald);"
+                title="Descontar as gramas utilizadas do estoque dos carretéis"
+                @click="handleDeductStock(q.id)"
+              >
+                📦 Baixar Estoque
+              </button>
+              <button 
+                v-else
+                type="button"
+                class="btn btn-secondary btn-sm"
+                style="padding: 0.2rem 0.5rem; font-size: 0.7rem; color: var(--text-dim);"
+                title="Devolver gramas ao estoque do carretel"
+                @click="handleRevertStock(q.id)"
+              >
+                ↩️ Estornar
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Card Footer Actions -->
@@ -166,9 +210,30 @@ const emit = defineEmits<{
   (e: 'quote-loaded'): void
 }>()
 
-const { savedQuotes, deleteQuote, loadQuoteIntoActive } = use3DStore()
+const { 
+  savedQuotes, 
+  deleteQuote, 
+  loadQuoteIntoActive, 
+  updateQuoteStatus, 
+  deductStockForQuote, 
+  revertStockDeduction 
+} = use3DStore()
 
 const searchQuery = ref('')
+
+const handleStatusChange = (id: string, status: 'orcamento' | 'em_producao' | 'concluido' | 'cancelado') => {
+  updateQuoteStatus(id, status)
+}
+
+const handleDeductStock = (id: string) => {
+  const res = deductStockForQuote(id)
+  alert(res.message)
+}
+
+const handleRevertStock = (id: string) => {
+  const res = revertStockDeduction(id)
+  alert(res.message)
+}
 
 const filteredQuotes = computed(() => {
   if (!searchQuery.value) return savedQuotes

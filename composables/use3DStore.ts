@@ -810,6 +810,96 @@ export const use3DStore = () => {
     if (quote.customProfitMargin !== undefined) activeJob.customProfitMargin = quote.customProfitMargin
   }
 
+  // Check if active or quote filament needs exceed available spool stock
+  const checkStockAvailability = (usageList: Array<{ filamentId: string, grams: number }>) => {
+    const warnings: Array<{ filamentName: string, availableG: number, requiredG: number, missingG: number }> = []
+
+    for (const item of usageList) {
+      const f = filaments.find(fil => fil.id === item.filamentId)
+      const required = Number(item.grams) || 0
+      if (f) {
+        const remaining = Number(f.remainingG) || 0
+        if (remaining < required) {
+          warnings.push({
+            filamentName: `${f.name} (${f.colorName})`,
+            availableG: remaining,
+            requiredG: required,
+            missingG: required - remaining
+          })
+        }
+      }
+    }
+
+    return warnings
+  }
+
+  // Deduct grams from filament stock when quote is printed/completed
+  const deductStockForQuote = (quoteId: string): { success: boolean, message: string } => {
+    const quote = savedQuotes.find(q => q.id === quoteId)
+    if (!quote) return { success: false, message: 'Orçamento não encontrado.' }
+
+    if (quote.isDeductedFromStock) {
+      return { success: false, message: 'O estoque deste orçamento já foi baixado anteriormente.' }
+    }
+
+    for (const item of quote.filaments) {
+      const f = filaments.find(fil => fil.id === item.filamentId)
+      if (f) {
+        const grams = Number(item.grams) || 0
+        f.remainingG = Math.max(0, (Number(f.remainingG) || 0) - grams)
+      }
+    }
+
+    quote.isDeductedFromStock = true
+    quote.status = 'concluido'
+
+    saveFilaments()
+    saveQuotes()
+
+    return { success: true, message: 'Baixa de filamento efetuada com sucesso no estoque!' }
+  }
+
+  // Revert stock deduction if order was cancelled or reverted
+  const revertStockDeduction = (quoteId: string): { success: boolean, message: string } => {
+    const quote = savedQuotes.find(q => q.id === quoteId)
+    if (!quote) return { success: false, message: 'Orçamento não encontrado.' }
+
+    if (!quote.isDeductedFromStock) {
+      return { success: false, message: 'Este orçamento não possui baixa de estoque ativa.' }
+    }
+
+    for (const item of quote.filaments) {
+      const f = filaments.find(fil => fil.id === item.filamentId)
+      if (f) {
+        const grams = Number(item.grams) || 0
+        f.remainingG = Math.min(f.spoolWeightG || 1000, (Number(f.remainingG) || 0) + grams)
+      }
+    }
+
+    quote.isDeductedFromStock = false
+    quote.status = 'orcamento'
+
+    saveFilaments()
+    saveQuotes()
+
+    return { success: true, message: 'Baixa de filamento revertida no estoque com sucesso.' }
+  }
+
+  // Update status
+  const updateQuoteStatus = (quoteId: string, newStatus: 'orcamento' | 'em_producao' | 'concluido' | 'cancelado') => {
+    const quote = savedQuotes.find(q => q.id === quoteId)
+    if (!quote) return
+
+    if (newStatus === 'concluido' && !quote.isDeductedFromStock) {
+      deductStockForQuote(quoteId)
+    } else if (newStatus !== 'concluido' && quote.isDeductedFromStock) {
+      revertStockDeduction(quoteId)
+    }
+
+    quote.status = newStatus
+    saveQuotes()
+  }
+
   return {
     filaments,
     printers,
@@ -843,6 +933,10 @@ export const use3DStore = () => {
     loadQuoteIntoActive,
     loadUserSpecificData,
     resetToGuestData,
-    triggerCloudSync
+    triggerCloudSync,
+    checkStockAvailability,
+    deductStockForQuote,
+    revertStockDeduction,
+    updateQuoteStatus
   }
 }
