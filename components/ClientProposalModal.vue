@@ -461,137 +461,151 @@ const handlePrint = () => {
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
       <style>
+        @page {
+          size: A4 portrait;
+          margin: 0; /* Remove browser default headers (URL, title) and footers (page numbers, date) */
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+          width: 100%;
+          height: 100%;
+          background: #ffffff;
+          color: #0f172a;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
         body {
           font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-          color: #0f172a;
-          background: #ffffff;
-          padding: 1.5cm;
-          line-height: 1.5;
+          padding: 0.8cm 1.2cm;
+          line-height: 1.4;
         }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
         .proposal-paper {
-          max-width: 800px;
+          max-width: 100%;
           margin: 0 auto;
           background: #ffffff;
+          page-break-inside: avoid;
+          break-inside: avoid;
         }
         .header-brand {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
           border-bottom: 2px solid #0284c7;
-          padding-bottom: 1.25rem;
-          margin-bottom: 1.5rem;
+          padding-bottom: 0.65rem;
+          margin-bottom: 0.75rem;
         }
         .brand-title {
-          font-size: 1.5rem;
+          font-size: 1.35rem;
           font-weight: 800;
           color: #0f172a;
           letter-spacing: -0.02em;
+          line-height: 1.2;
         }
         .brand-sub {
-          font-size: 0.825rem;
+          font-size: 0.775rem;
           color: #0284c7;
           font-weight: 700;
         }
         .header-meta {
           text-align: right;
-          font-size: 0.8rem;
+          font-size: 0.75rem;
           color: #64748b;
+          line-height: 1.35;
         }
         .info-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 1.25rem;
+          gap: 0.85rem;
           background: #f8fafc;
           border: 1px solid #e2e8f0;
           border-radius: 8px;
-          padding: 1.25rem;
-          margin-bottom: 1.5rem;
+          padding: 0.65rem 0.85rem;
+          margin-bottom: 0.75rem;
         }
         .info-label {
-          font-size: 0.725rem;
+          font-size: 0.675rem;
           text-transform: uppercase;
           color: #64748b;
           font-weight: 700;
-          margin-bottom: 0.25rem;
+          margin-bottom: 0.15rem;
         }
         .info-value {
-          font-size: 1.1rem;
+          font-size: 1rem;
           font-weight: 700;
           color: #0f172a;
         }
         .specs-title {
-          font-size: 0.85rem;
+          font-size: 0.775rem;
           font-weight: 700;
           text-transform: uppercase;
           color: #475569;
-          margin-bottom: 0.75rem;
+          margin-bottom: 0.4rem;
         }
         .specs-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
-          gap: 0.75rem;
-          margin-bottom: 1.5rem;
+          gap: 0.65rem;
+          margin-bottom: 0.75rem;
         }
         .specs-card {
           border: 1px solid #e2e8f0;
           background: #f8fafc;
-          padding: 0.85rem;
-          border-radius: 8px;
+          padding: 0.5rem 0.65rem;
+          border-radius: 6px;
         }
         .notes-box {
           background: #f0fdfa;
-          border-left: 4px solid #0d9488;
-          padding: 0.85rem 1rem;
+          border-left: 3px solid #0d9488;
+          padding: 0.5rem 0.75rem;
           border-radius: 4px;
-          margin-bottom: 1.5rem;
-          font-size: 0.85rem;
+          margin-bottom: 0.75rem;
+          font-size: 0.78rem;
           color: #134e4a;
         }
         .price-box {
           background: #f0fdf4;
           border: 1.5px solid #16a34a;
-          border-radius: 10px;
-          padding: 1.25rem;
+          border-radius: 8px;
+          padding: 0.75rem 1rem;
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 1.5rem;
+          margin-bottom: 0.75rem;
         }
         .price-total {
           font-family: 'JetBrains Mono', monospace;
-          font-size: 2.2rem;
+          font-size: 1.85rem;
           font-weight: 800;
           color: #15803d;
           line-height: 1;
         }
         .pix-box {
           border: 1.5px dashed #0284c7;
-          border-radius: 10px;
+          border-radius: 8px;
           background: #f8fafc;
-          padding: 1.25rem;
+          padding: 0.75rem 0.85rem;
         }
         .pix-header {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
-          margin-bottom: 1rem;
-          padding-bottom: 0.5rem;
+          gap: 0.45rem;
+          margin-bottom: 0.5rem;
+          padding-bottom: 0.35rem;
           border-bottom: 1px solid #e2e8f0;
         }
         .pix-content {
           display: flex;
-          gap: 1.5rem;
+          gap: 1rem;
           align-items: center;
         }
         .pix-qr {
-          width: 140px;
-          height: 140px;
+          width: 120px;
+          height: 120px;
           background: #ffffff;
           border: 1px solid #cbd5e1;
-          border-radius: 8px;
-          padding: 0.35rem;
+          border-radius: 6px;
+          padding: 0.25rem;
           flex-shrink: 0;
         }
         .pix-qr img {
@@ -602,33 +616,30 @@ const handlePrint = () => {
         }
         .pix-details {
           flex: 1;
-          font-size: 0.85rem;
+          font-size: 0.775rem;
           display: flex;
           flex-direction: column;
-          gap: 0.45rem;
+          gap: 0.3rem;
         }
         .pix-copia-cola {
           font-family: 'JetBrains Mono', monospace;
-          font-size: 0.72rem;
+          font-size: 0.675rem;
           background: #ffffff;
           border: 1px solid #cbd5e1;
-          border-radius: 6px;
-          padding: 0.5rem;
+          border-radius: 4px;
+          padding: 0.35rem;
           word-break: break-all;
           color: #334155;
-          margin-top: 0.25rem;
+          margin-top: 0.15rem;
+          line-height: 1.25;
         }
         .footer-note {
-          margin-top: 2rem;
+          margin-top: 0.75rem;
           text-align: center;
-          font-size: 0.775rem;
+          font-size: 0.725rem;
           color: #94a3b8;
           border-top: 1px solid #e2e8f0;
-          padding-top: 1rem;
-        }
-        @page {
-          size: A4 portrait;
-          margin: 1cm;
+          padding-top: 0.4rem;
         }
       </style>
     </head>
