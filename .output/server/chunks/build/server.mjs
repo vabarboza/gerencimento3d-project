@@ -2,6 +2,7 @@ import process from 'node:process';globalThis._importMeta_=globalThis._importMet
 import { p as parseURL, e as encodePath, l as decodePath, m as hasProtocol, n as isScriptProtocol, o as joinURL, w as withQuery, q as sanitizeStatusCode, r as getContext, $ as $fetch, v as createHooks, f as createError$1, x as isEqual, y as stringifyParsedURL, z as stringifyQuery, A as parseQuery, B as defu } from '../_/nitro.mjs';
 import { b as baseURL } from '../routes/renderer.mjs';
 import { ssrRenderAttrs, ssrRenderStyle, ssrRenderClass, ssrInterpolate, ssrRenderAttr, ssrIncludeBooleanAttr, ssrRenderList, ssrLooseContain, ssrLooseEqual, ssrRenderComponent, ssrRenderSuspense, ssrRenderVNode } from 'vue/server-renderer';
+import QRCode from 'qrcode';
 import 'node:http';
 import 'node:https';
 import 'node:events';
@@ -1023,7 +1024,11 @@ const DEFAULT_SETTINGS = {
   // 65% de lucro líquido alvo
   taxRatePercent: 5,
   // 5% imposto MEI / Simples
-  currency: "BRL"
+  currency: "BRL",
+  pixKey: "financeiro@print3d.com",
+  pixKeyType: "email",
+  pixBeneficiaryName: "PRINT3D STUDIO",
+  pixBeneficiaryCity: "SAO PAULO"
 };
 const DEFAULT_PLATFORMS = [
   {
@@ -1862,8 +1867,40 @@ const _sfc_main$5 = /* @__PURE__ */ defineComponent({
       isDefault: false
     };
     const form = reactive({ ...defaultForm });
+    const getPixKeyPlaceholder = (type) => {
+      switch (type) {
+        case "cpf":
+          return "Ex: 123.456.789-00 ou 12345678900";
+        case "cnpj":
+          return "Ex: 12.345.678/0001-90";
+        case "phone":
+          return "Ex: (11) 98765-4321 ou 11987654321";
+        case "email":
+          return "Ex: financeiro@suaempresa.com.br";
+        case "random":
+          return "Ex: 123e4567-e89b-12d3-a456-426614174000";
+        default:
+          return "Digite sua Chave PIX";
+      }
+    };
+    const getPixKeyHelper = (type) => {
+      switch (type) {
+        case "cpf":
+          return "O sistema limpa pontos e traços para atender a norma do Banco Central.";
+        case "cnpj":
+          return "O sistema limpa barras, pontos e traços automaticamente.";
+        case "phone":
+          return "O sistema insere o prefixo internacional (+55) automaticamente.";
+        case "email":
+          return "Certifique-se de que o e-mail cadastrado no seu banco está correto.";
+        case "random":
+          return "Chave aleatória gerada pelo seu banco (código UUID de 36 caracteres).";
+        default:
+          return "";
+      }
+    };
     return (_ctx, _push, _parent, _attrs) => {
-      _push(`<div${ssrRenderAttrs(mergeProps({ class: "printer-settings-section" }, _attrs))}><div class="card card-glass" style="${ssrRenderStyle({ "margin-bottom": "1.5rem" })}"><div style="${ssrRenderStyle({ "display": "flex", "justify-content": "space-between", "align-items": "center", "flex-wrap": "wrap", "gap": "1rem" })}"><div><h2 style="${ssrRenderStyle({ "font-size": "1.4rem", "font-weight": "800", "display": "flex", "align-items": "center", "gap": "0.6rem" })}"><span class="text-gradient">Impressoras 3D &amp; Custos Operacionais</span></h2><p class="card-subtitle"> Configure suas máquinas, consumo elétrico, depreciação, custo da energia por kWh e valor da sua hora técnica. </p></div><button id="btn-add-printer-open" class="btn btn-primary btn-sm"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Adicionar Impressora </button></div></div><div style="${ssrRenderStyle({ "display": "grid", "grid-template-columns": "1fr 1.6fr", "gap": "1.5rem", "align-items": "start" })}"><div class="card"><div class="card-header"><div class="card-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand-amber)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg><span>Custos Fixos &amp; Parâmetros</span></div><span class="badge badge-amber">Global</span></div><form><div class="form-group"><label class="form-label" for="sett-kwh"><span>Energia Elétrica (R$ / kWh)</span><span style="${ssrRenderStyle({ "font-size": "0.725rem", "color": "var(--text-dim)" })}">Consulte sua conta de luz</span></label><div class="input-prefix-box"><span class="input-prefix-tag">R$</span><input id="sett-kwh"${ssrRenderAttr("value", unref(settings2).electricityCostPerKwh)} type="number" class="input-control font-mono" step="0.01" min="0" required><span class="input-prefix-tag">/ kWh</span></div></div><div class="form-group"><label class="form-label" for="sett-labor"><span>Valor da sua Hora Técnica</span><span style="${ssrRenderStyle({ "font-size": "0.725rem", "color": "var(--text-dim)" })}">Fatiamento, suportes e pós</span></label><div class="input-prefix-box"><span class="input-prefix-tag">R$</span><input id="sett-labor"${ssrRenderAttr("value", unref(settings2).hourlyLaborRate)} type="number" class="input-control font-mono" step="1" min="0" required><span class="input-prefix-tag">/ hora</span></div></div><div class="form-group"><label class="form-label" for="sett-failure"><span>Margem de Falha / Descarte Padrão</span><span class="font-mono text-gradient-amber">${ssrInterpolate(unref(settings2).defaultFailureRate)}%</span></label><input id="sett-failure"${ssrRenderAttr("value", unref(settings2).defaultFailureRate)} type="range" class="range-input" min="0" max="25" step="1"><span style="${ssrRenderStyle({ "font-size": "0.75rem", "color": "var(--text-dim)" })}">Cobre peças descoladas, entupimentos e testes de calibração.</span></div><div class="form-group"><label class="form-label" for="sett-profit"><span>Margem de Lucro Alvo Padrão (Markup)</span><span class="font-mono text-gradient-emerald">${ssrInterpolate(unref(settings2).defaultProfitMargin)}%</span></label><input id="sett-profit"${ssrRenderAttr("value", unref(settings2).defaultProfitMargin)} type="range" class="range-input" min="10" max="200" step="5"><span style="${ssrRenderStyle({ "font-size": "0.75rem", "color": "var(--text-dim)" })}">Adicionada sobre o custo total de fabricação na venda direta.</span></div><div class="form-group"><label class="form-label" for="sett-tax"><span>Imposto sobre Venda / Nota Fiscal</span><span style="${ssrRenderStyle({ "font-size": "0.725rem", "color": "var(--text-dim)" })}">Simples / DAS</span></label><div class="input-prefix-box"><input id="sett-tax"${ssrRenderAttr("value", unref(settings2).taxRatePercent)} type="number" class="input-control font-mono" step="0.5" min="0" max="30" required><span class="input-prefix-tag">%</span></div><span style="${ssrRenderStyle({ "font-size": "0.75rem", "color": "var(--text-dim)" })}">Para MEI (isento de % por nota) use 0% a 3%. Para Simples Nacional use 4% a 8%.</span></div><div style="${ssrRenderStyle({ "background": "rgba(16, 185, 129, 0.08)", "border": "1px solid rgba(16, 185, 129, 0.2)", "border-radius": "var(--radius-md)", "padding": "0.75rem", "margin-top": "1rem", "display": "flex", "align-items": "center", "gap": "0.5rem", "font-size": "0.8rem", "color": "var(--brand-emerald)" })}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg><span>Configurações salvas automaticamente no navegador.</span></div></form></div><div style="${ssrRenderStyle({ "display": "flex", "flex-direction": "column", "gap": "1rem" })}"><!--[-->`);
+      _push(`<div${ssrRenderAttrs(mergeProps({ class: "printer-settings-section" }, _attrs))}><div class="card card-glass" style="${ssrRenderStyle({ "margin-bottom": "1.5rem" })}"><div style="${ssrRenderStyle({ "display": "flex", "justify-content": "space-between", "align-items": "center", "flex-wrap": "wrap", "gap": "1rem" })}"><div><h2 style="${ssrRenderStyle({ "font-size": "1.4rem", "font-weight": "800", "display": "flex", "align-items": "center", "gap": "0.6rem" })}"><span class="text-gradient">Impressoras 3D &amp; Custos Operacionais</span></h2><p class="card-subtitle"> Configure suas máquinas, consumo elétrico, depreciação, custo da energia por kWh e valor da sua hora técnica. </p></div><button id="btn-add-printer-open" class="btn btn-primary btn-sm"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Adicionar Impressora </button></div></div><div style="${ssrRenderStyle({ "display": "grid", "grid-template-columns": "1fr 1.6fr", "gap": "1.5rem", "align-items": "start" })}"><div class="card"><div class="card-header"><div class="card-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand-amber)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg><span>Custos Fixos &amp; Parâmetros</span></div><span class="badge badge-amber">Global</span></div><form><div class="form-group"><label class="form-label" for="sett-kwh"><span>Energia Elétrica (R$ / kWh)</span><span style="${ssrRenderStyle({ "font-size": "0.725rem", "color": "var(--text-dim)" })}">Consulte sua conta de luz</span></label><div class="input-prefix-box"><span class="input-prefix-tag">R$</span><input id="sett-kwh"${ssrRenderAttr("value", unref(settings2).electricityCostPerKwh)} type="number" class="input-control font-mono" step="0.01" min="0" required><span class="input-prefix-tag">/ kWh</span></div></div><div class="form-group"><label class="form-label" for="sett-labor"><span>Valor da sua Hora Técnica</span><span style="${ssrRenderStyle({ "font-size": "0.725rem", "color": "var(--text-dim)" })}">Fatiamento, suportes e pós</span></label><div class="input-prefix-box"><span class="input-prefix-tag">R$</span><input id="sett-labor"${ssrRenderAttr("value", unref(settings2).hourlyLaborRate)} type="number" class="input-control font-mono" step="1" min="0" required><span class="input-prefix-tag">/ hora</span></div></div><div class="form-group"><label class="form-label" for="sett-failure"><span>Margem de Falha / Descarte Padrão</span><span class="font-mono text-gradient-amber">${ssrInterpolate(unref(settings2).defaultFailureRate)}%</span></label><input id="sett-failure"${ssrRenderAttr("value", unref(settings2).defaultFailureRate)} type="range" class="range-input" min="0" max="25" step="1"><span style="${ssrRenderStyle({ "font-size": "0.75rem", "color": "var(--text-dim)" })}">Cobre peças descoladas, entupimentos e testes de calibração.</span></div><div class="form-group"><label class="form-label" for="sett-profit"><span>Margem de Lucro Alvo Padrão (Markup)</span><span class="font-mono text-gradient-emerald">${ssrInterpolate(unref(settings2).defaultProfitMargin)}%</span></label><input id="sett-profit"${ssrRenderAttr("value", unref(settings2).defaultProfitMargin)} type="range" class="range-input" min="10" max="200" step="5"><span style="${ssrRenderStyle({ "font-size": "0.75rem", "color": "var(--text-dim)" })}">Adicionada sobre o custo total de fabricação na venda direta.</span></div><div class="form-group"><label class="form-label" for="sett-tax"><span>Imposto sobre Venda / Nota Fiscal</span><span style="${ssrRenderStyle({ "font-size": "0.725rem", "color": "var(--text-dim)" })}">Simples / DAS</span></label><div class="input-prefix-box"><input id="sett-tax"${ssrRenderAttr("value", unref(settings2).taxRatePercent)} type="number" class="input-control font-mono" step="0.5" min="0" max="30" required><span class="input-prefix-tag">%</span></div><span style="${ssrRenderStyle({ "font-size": "0.75rem", "color": "var(--text-dim)" })}">Para MEI use 0% a 3%. Para Simples use 4% a 8%.</span></div><div style="${ssrRenderStyle({ "border-top": "1px solid var(--border-subtle)", "padding-top": "1.25rem", "margin-top": "1.25rem" })}"><div style="${ssrRenderStyle({ "display": "flex", "align-items": "center", "gap": "0.5rem", "margin-bottom": "0.85rem" })}"><span style="${ssrRenderStyle({ "font-size": "1.1rem" })}">📱</span><span style="${ssrRenderStyle({ "font-size": "0.95rem", "font-weight": "700", "color": "var(--text-main)" })}">Chave PIX para Propostas</span></div><div class="form-group"><label class="form-label" for="sett-pix-type">Tipo de Chave PIX</label><select id="sett-pix-type" class="input-control"><option value="cpf"${ssrIncludeBooleanAttr(Array.isArray(unref(settings2).pixKeyType) ? ssrLooseContain(unref(settings2).pixKeyType, "cpf") : ssrLooseEqual(unref(settings2).pixKeyType, "cpf")) ? " selected" : ""}>📄 CPF (11 dígitos)</option><option value="cnpj"${ssrIncludeBooleanAttr(Array.isArray(unref(settings2).pixKeyType) ? ssrLooseContain(unref(settings2).pixKeyType, "cnpj") : ssrLooseEqual(unref(settings2).pixKeyType, "cnpj")) ? " selected" : ""}>🏢 CNPJ (14 dígitos)</option><option value="phone"${ssrIncludeBooleanAttr(Array.isArray(unref(settings2).pixKeyType) ? ssrLooseContain(unref(settings2).pixKeyType, "phone") : ssrLooseEqual(unref(settings2).pixKeyType, "phone")) ? " selected" : ""}>📱 Celular / WhatsApp (+55 DDD...)</option><option value="email"${ssrIncludeBooleanAttr(Array.isArray(unref(settings2).pixKeyType) ? ssrLooseContain(unref(settings2).pixKeyType, "email") : ssrLooseEqual(unref(settings2).pixKeyType, "email")) ? " selected" : ""}>✉️ E-mail</option><option value="random"${ssrIncludeBooleanAttr(Array.isArray(unref(settings2).pixKeyType) ? ssrLooseContain(unref(settings2).pixKeyType, "random") : ssrLooseEqual(unref(settings2).pixKeyType, "random")) ? " selected" : ""}>🔑 Chave Aleatória (EVP)</option></select></div><div class="form-group"><label class="form-label" for="sett-pix-key">Chave PIX</label><input id="sett-pix-key"${ssrRenderAttr("value", unref(settings2).pixKey)} type="text" class="input-control font-mono"${ssrRenderAttr("placeholder", getPixKeyPlaceholder(unref(settings2).pixKeyType))}><span style="${ssrRenderStyle({ "font-size": "0.725rem", "color": "var(--text-dim)", "margin-top": "0.25rem", "display": "block" })}">${ssrInterpolate(getPixKeyHelper(unref(settings2).pixKeyType))}</span></div><div class="form-group"><label class="form-label" for="sett-pix-name">Nome do Titular / Beneficiário</label><input id="sett-pix-name"${ssrRenderAttr("value", unref(settings2).pixBeneficiaryName)} type="text" class="input-control" placeholder="Ex: SEU NOME OU EMPRESA"></div><div class="form-group" style="${ssrRenderStyle({ "margin-bottom": "0.5rem" })}"><label class="form-label" for="sett-pix-city">Cidade</label><input id="sett-pix-city"${ssrRenderAttr("value", unref(settings2).pixBeneficiaryCity)} type="text" class="input-control" placeholder="Ex: SAO PAULO"></div><span style="${ssrRenderStyle({ "font-size": "0.725rem", "color": "var(--text-dim)" })}">Utilizado para gerar o QR Code dinâmico e o código Copia e Cola nas propostas de clientes.</span></div><div style="${ssrRenderStyle({ "background": "rgba(16, 185, 129, 0.08)", "border": "1px solid rgba(16, 185, 129, 0.2)", "border-radius": "var(--radius-md)", "padding": "0.75rem", "margin-top": "1rem", "display": "flex", "align-items": "center", "gap": "0.5rem", "font-size": "0.8rem", "color": "var(--brand-emerald)" })}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg><span>Configurações salvas automaticamente no navegador.</span></div></form></div><div style="${ssrRenderStyle({ "display": "flex", "flex-direction": "column", "gap": "1rem" })}"><!--[-->`);
       ssrRenderList(unref(printers2), (p) => {
         _push(`<div class="card" style="${ssrRenderStyle({ "display": "flex", "flex-direction": "column", "justify-content": "space-between" })}"><div><div style="${ssrRenderStyle({ "display": "flex", "justify-content": "space-between", "align-items": "flex-start", "margin-bottom": "0.75rem" })}"><div style="${ssrRenderStyle({ "display": "flex", "align-items": "center", "gap": "0.75rem" })}"><div style="${ssrRenderStyle({ "width": "38px", "height": "38px", "background": "rgba(0, 240, 255, 0.1)", "border": "1px solid rgba(0, 240, 255, 0.3)", "border-radius": "var(--radius-md)", "display": "flex", "align-items": "center", "justify-content": "center", "color": "var(--brand-cyan)" })}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></div><div><h3 style="${ssrRenderStyle({ "font-size": "1.1rem", "font-weight": "700" })}">${ssrInterpolate(p.name)}</h3><span style="${ssrRenderStyle({ "font-size": "0.775rem", "color": "var(--text-dim)" })}">${ssrInterpolate(p.brand)} • Modelo: ${ssrInterpolate(p.model)}</span></div></div><div style="${ssrRenderStyle({ "display": "flex", "gap": "0.5rem", "align-items": "center" })}">`);
         if (p.isDefault) {
@@ -1951,6 +1988,103 @@ _sfc_main$4.setup = (props, ctx) => {
   (ssrContext.modules || (ssrContext.modules = /* @__PURE__ */ new Set())).add("components/SavedQuotesManager.vue");
   return _sfc_setup$4 ? _sfc_setup$4(props, ctx) : void 0;
 };
+function formatEMV(id, value) {
+  const len = value.length.toString().padStart(2, "0");
+  return `${id}${len}${value}`;
+}
+function crc16(str) {
+  let crc = 65535;
+  for (let i = 0; i < str.length; i++) {
+    crc ^= str.charCodeAt(i) << 8;
+    for (let j = 0; j < 8; j++) {
+      if ((crc & 32768) !== 0) {
+        crc = (crc << 1 ^ 4129) & 65535;
+      } else {
+        crc = crc << 1 & 65535;
+      }
+    }
+  }
+  return crc.toString(16).toUpperCase().padStart(4, "0");
+}
+function sanitizeText(str, maxLen) {
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9\s]/g, "").slice(0, maxLen).trim();
+}
+function normalizePixKey(key, type) {
+  if (!key) return "";
+  const trimmed = key.trim();
+  let detectedType = type;
+  switch (detectedType) {
+    case "cpf":
+      return trimmed.replace(/\D/g, "").slice(0, 11);
+    case "cnpj":
+      return trimmed.replace(/\D/g, "").slice(0, 14);
+    case "phone": {
+      const digits = trimmed.replace(/\D/g, "");
+      if (digits.startsWith("55") && digits.length >= 12) {
+        return `+${digits}`;
+      }
+      return `+55${digits}`;
+    }
+    case "email":
+      return trimmed.toLowerCase();
+    case "random":
+      return trimmed.toLowerCase();
+    default:
+      return trimmed;
+  }
+}
+function generatePixPayload(config) {
+  const {
+    pixKey,
+    pixKeyType,
+    beneficiaryName,
+    beneficiaryCity = "SAO PAULO",
+    amount,
+    txId = "***",
+    description
+  } = config;
+  const normKey = normalizePixKey(pixKey, pixKeyType);
+  const normName = sanitizeText(beneficiaryName, 25) || "RECEBEDOR";
+  const normCity = sanitizeText(beneficiaryCity, 15) || "SAO PAULO";
+  const normTxId = (txId || "***").replace(/[^a-zA-Z0-9]/g, "").slice(0, 25) || "***";
+  let accountInfo = formatEMV("00", "br.gov.bcb.pix");
+  accountInfo += formatEMV("01", normKey);
+  if (description) {
+    accountInfo += formatEMV("02", sanitizeText(description, 40));
+  }
+  let payload = "";
+  payload += formatEMV("00", "01");
+  payload += formatEMV("26", accountInfo);
+  payload += formatEMV("52", "0000");
+  payload += formatEMV("53", "986");
+  if (amount && amount > 0) {
+    payload += formatEMV("54", amount.toFixed(2));
+  }
+  payload += formatEMV("58", "BR");
+  payload += formatEMV("59", normName);
+  payload += formatEMV("60", normCity);
+  const additionalData = formatEMV("05", normTxId);
+  payload += formatEMV("62", additionalData);
+  payload += "6304";
+  const crc = crc16(payload);
+  return payload + crc;
+}
+async function generatePixQrCodeDataUrl(payload) {
+  try {
+    return await QRCode.toDataURL(payload, {
+      errorCorrectionLevel: "M",
+      margin: 2,
+      width: 280,
+      color: {
+        dark: "#000000",
+        light: "#ffffff"
+      }
+    });
+  } catch (err) {
+    console.error("Error generating PIX QR Code:", err);
+    return "";
+  }
+}
 const _sfc_main$3 = /* @__PURE__ */ defineComponent({
   __name: "ClientProposalModal",
   __ssrInlineRender: true,
@@ -1966,19 +2100,110 @@ const _sfc_main$3 = /* @__PURE__ */ defineComponent({
   },
   emits: ["close"],
   setup(__props) {
+    const props = __props;
+    const store = use3DStore();
+    const { settings: settings2 } = store;
     const copied = ref(false);
+    const copiedKey = ref(false);
+    const copiedPayload = ref(false);
+    const isEditingPix = ref(false);
+    const currentPixKey = ref(settings2.pixKey || "");
+    const currentPixKeyType = ref(settings2.pixKeyType || "email");
+    const currentBeneficiary = ref(settings2.pixBeneficiaryName || "PRINT3D STUDIO");
+    const currentCity = ref(settings2.pixBeneficiaryCity || "SAO PAULO");
+    const syncWithSettings = () => {
+      currentPixKey.value = settings2.pixKey || "";
+      currentPixKeyType.value = settings2.pixKeyType || "email";
+      currentBeneficiary.value = settings2.pixBeneficiaryName || "PRINT3D STUDIO";
+      currentCity.value = settings2.pixBeneficiaryCity || "SAO PAULO";
+    };
+    watch(() => props.isOpen, (open) => {
+      if (open) {
+        syncWithSettings();
+        isEditingPix.value = false;
+      }
+    });
+    watch(() => [settings2.pixKey, settings2.pixKeyType, settings2.pixBeneficiaryName, settings2.pixBeneficiaryCity], () => {
+      syncWithSettings();
+    }, { deep: true });
+    const qrCodeDataUrl = ref("");
     const formattedDate = computed(() => {
       return (/* @__PURE__ */ new Date()).toLocaleDateString("pt-BR");
     });
+    const getPixPlaceholder = (type) => {
+      switch (type) {
+        case "cpf":
+          return "Ex: 123.456.789-00";
+        case "cnpj":
+          return "Ex: 12.345.678/0001-90";
+        case "phone":
+          return "Ex: (11) 98765-4321";
+        case "email":
+          return "Ex: financeiro@empresa.com";
+        case "random":
+          return "Ex: 123e4567-e89b-12d3-a456-426614174000";
+        default:
+          return "Chave PIX";
+      }
+    };
+    const formatKeyTypeBadge = (type) => {
+      switch (type) {
+        case "cpf":
+          return "CPF";
+        case "cnpj":
+          return "CNPJ";
+        case "phone":
+          return "Celular";
+        case "email":
+          return "E-mail";
+        case "random":
+          return "Aleatória";
+        default:
+          return "PIX";
+      }
+    };
+    const pixPayload = computed(() => {
+      const key = currentPixKey.value || settings2.pixKey || "financeiro@print3d.com";
+      const type = currentPixKeyType.value || settings2.pixKeyType || "email";
+      const name = currentBeneficiary.value || settings2.pixBeneficiaryName || "PRINT3D STUDIO";
+      const city = currentCity.value || settings2.pixBeneficiaryCity || "SAO PAULO";
+      return generatePixPayload({
+        pixKey: key,
+        pixKeyType: type,
+        beneficiaryName: name,
+        beneficiaryCity: city,
+        amount: props.finalPrice,
+        description: (props.jobTitle || "PROJETO 3D").slice(0, 30)
+      });
+    });
+    const updateQrCode = async () => {
+      if (!pixPayload.value) return;
+      qrCodeDataUrl.value = await generatePixQrCodeDataUrl(pixPayload.value);
+    };
+    watch(pixPayload, () => {
+      updateQrCode();
+    }, { immediate: true });
     return (_ctx, _push, _parent, _attrs) => {
       if (__props.isOpen) {
-        _push(`<div${ssrRenderAttrs(mergeProps({ class: "modal-backdrop" }, _attrs))}><div class="modal-content card" style="${ssrRenderStyle({ "max-width": "720px", "background": "#0b1120", "border": "1px solid rgba(0, 240, 255, 0.3)" })}"><div class="card-header" style="${ssrRenderStyle({ "border-bottom": "1px solid rgba(255, 255, 255, 0.08)" })}"><div class="card-title"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand-cyan)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg><span>Proposta Comercial de Impressão 3D</span></div><button class="btn btn-secondary btn-icon btn-sm">✕</button></div><div id="proposal-printable-card" style="${ssrRenderStyle({ "padding": "1.5rem", "background": "#070a12", "border-radius": "var(--radius-lg)", "border": "1px solid rgba(255, 255, 255, 0.06)", "margin-bottom": "1.5rem" })}"><div style="${ssrRenderStyle({ "display": "flex", "justify-content": "space-between", "align-items": "flex-start", "margin-bottom": "1.5rem", "border-bottom": "1px solid rgba(255, 255, 255, 0.06)", "padding-bottom": "1rem" })}"><div><div style="${ssrRenderStyle({ "font-size": "1.4rem", "font-weight": "800", "color": "#fff", "letter-spacing": "-0.02em" })}"> STUDIO 3D • PROPOSTA </div><div style="${ssrRenderStyle({ "font-size": "0.8rem", "color": "var(--brand-cyan)", "font-weight": "600" })}"> Manufatura Aditiva &amp; Prototipagem de Alta Precisão </div></div><div style="${ssrRenderStyle({ "text-align": "right", "font-size": "0.8rem", "color": "var(--text-dim)" })}"><div>Data: <strong>${ssrInterpolate(formattedDate.value)}</strong></div><div>Validade: <strong>10 dias</strong></div></div></div><div style="${ssrRenderStyle({ "display": "grid", "grid-template-columns": "1fr 1fr", "gap": "1rem", "margin-bottom": "1.5rem", "background": "rgba(255, 255, 255, 0.02)", "padding": "1rem", "border-radius": "var(--radius-md)" })}"><div><span style="${ssrRenderStyle({ "font-size": "0.725rem", "color": "var(--text-dim)", "text-transform": "uppercase" })}">Cliente:</span><div style="${ssrRenderStyle({ "font-weight": "700", "font-size": "1.05rem", "color": "var(--text-main)" })}">${ssrInterpolate(__props.clientName || "Cliente Particular")}</div></div><div><span style="${ssrRenderStyle({ "font-size": "0.725rem", "color": "var(--text-dim)", "text-transform": "uppercase" })}">Projeto / Peça:</span><div style="${ssrRenderStyle({ "font-weight": "700", "font-size": "1.05rem", "color": "var(--brand-cyan)" })}">${ssrInterpolate(__props.jobTitle)}</div></div></div><div style="${ssrRenderStyle({ "margin-bottom": "1.5rem" })}"><h4 style="${ssrRenderStyle({ "font-size": "0.85rem", "text-transform": "uppercase", "color": "var(--text-muted)", "margin-bottom": "0.75rem", "font-weight": "700" })}"> Especificações Técnicas de Fabricação </h4><div style="${ssrRenderStyle({ "display": "grid", "grid-template-columns": "repeat(3, 1fr)", "gap": "0.75rem" })}"><div style="${ssrRenderStyle({ "background": "rgba(0, 0, 0, 0.3)", "padding": "0.75rem", "border-radius": "var(--radius-md)", "border": "1px solid rgba(255, 255, 255, 0.04)" })}"><span style="${ssrRenderStyle({ "font-size": "0.7rem", "color": "var(--text-dim)", "text-transform": "uppercase" })}">Material(is)</span><div style="${ssrRenderStyle({ "font-weight": "700", "font-size": "0.95rem", "color": "var(--text-main)" })}">${ssrInterpolate(__props.materialList)}</div></div><div style="${ssrRenderStyle({ "background": "rgba(0, 0, 0, 0.3)", "padding": "0.75rem", "border-radius": "var(--radius-md)", "border": "1px solid rgba(255, 255, 255, 0.04)" })}"><span style="${ssrRenderStyle({ "font-size": "0.7rem", "color": "var(--text-dim)", "text-transform": "uppercase" })}">Peso Estimado</span><div class="font-mono" style="${ssrRenderStyle({ "font-weight": "700", "font-size": "0.95rem", "color": "var(--text-main)" })}">${ssrInterpolate(__props.totalGrams)} gramas </div></div><div style="${ssrRenderStyle({ "background": "rgba(0, 0, 0, 0.3)", "padding": "0.75rem", "border-radius": "var(--radius-md)", "border": "1px solid rgba(255, 255, 255, 0.04)" })}"><span style="${ssrRenderStyle({ "font-size": "0.7rem", "color": "var(--text-dim)", "text-transform": "uppercase" })}">Prazo Médio</span><div style="${ssrRenderStyle({ "font-weight": "700", "font-size": "0.95rem", "color": "var(--text-main)" })}">${ssrInterpolate(__props.printHours <= 5 ? "1 a 2 dias úteis" : "2 a 4 dias úteis")}</div></div></div></div>`);
+        _push(`<div${ssrRenderAttrs(mergeProps({ class: "modal-backdrop" }, _attrs))} data-v-09f5a294><div class="modal-content card" style="${ssrRenderStyle({ "max-width": "760px", "background": "#0b1120", "border": "1px solid rgba(0, 240, 255, 0.3)" })}" data-v-09f5a294><div class="card-header" style="${ssrRenderStyle({ "border-bottom": "1px solid rgba(255, 255, 255, 0.08)" })}" data-v-09f5a294><div class="card-title" data-v-09f5a294><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand-cyan)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" data-v-09f5a294><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" data-v-09f5a294></path><polyline points="14 2 14 8 20 8" data-v-09f5a294></polyline><line x1="16" y1="13" x2="8" y2="13" data-v-09f5a294></line><line x1="16" y1="17" x2="8" y2="17" data-v-09f5a294></line><polyline points="10 9 9 9 8 9" data-v-09f5a294></polyline></svg><span data-v-09f5a294>Proposta Comercial de Impressão 3D</span></div><button class="btn btn-secondary btn-icon btn-sm" data-v-09f5a294>✕</button></div><div id="proposal-printable-card" style="${ssrRenderStyle({ "padding": "1.5rem", "background": "#070a12", "border-radius": "var(--radius-lg)", "border": "1px solid rgba(255, 255, 255, 0.06)", "margin-bottom": "1.5rem" })}" data-v-09f5a294><div style="${ssrRenderStyle({ "display": "flex", "justify-content": "space-between", "align-items": "flex-start", "margin-bottom": "1.5rem", "border-bottom": "1px solid rgba(255, 255, 255, 0.06)", "padding-bottom": "1rem" })}" data-v-09f5a294><div data-v-09f5a294><div style="${ssrRenderStyle({ "font-size": "1.4rem", "font-weight": "800", "color": "#fff", "letter-spacing": "-0.02em" })}" data-v-09f5a294> STUDIO 3D • PROPOSTA COMERCIAL </div><div style="${ssrRenderStyle({ "font-size": "0.8rem", "color": "var(--brand-cyan)", "font-weight": "600" })}" data-v-09f5a294> Manufatura Aditiva &amp; Prototipagem de Alta Precisão </div></div><div style="${ssrRenderStyle({ "text-align": "right", "font-size": "0.8rem", "color": "var(--text-dim)" })}" data-v-09f5a294><div data-v-09f5a294>Data: <strong data-v-09f5a294>${ssrInterpolate(formattedDate.value)}</strong></div><div data-v-09f5a294>Validade: <strong data-v-09f5a294>10 dias</strong></div></div></div><div style="${ssrRenderStyle({ "display": "grid", "grid-template-columns": "1fr 1fr", "gap": "1rem", "margin-bottom": "1.5rem", "background": "rgba(255, 255, 255, 0.02)", "padding": "1rem", "border-radius": "var(--radius-md)" })}" data-v-09f5a294><div data-v-09f5a294><span style="${ssrRenderStyle({ "font-size": "0.725rem", "color": "var(--text-dim)", "text-transform": "uppercase" })}" data-v-09f5a294>Cliente:</span><div style="${ssrRenderStyle({ "font-weight": "700", "font-size": "1.05rem", "color": "var(--text-main)" })}" data-v-09f5a294>${ssrInterpolate(__props.clientName || "Cliente Particular")}</div></div><div data-v-09f5a294><span style="${ssrRenderStyle({ "font-size": "0.725rem", "color": "var(--text-dim)", "text-transform": "uppercase" })}" data-v-09f5a294>Projeto / Peça:</span><div style="${ssrRenderStyle({ "font-weight": "700", "font-size": "1.05rem", "color": "var(--brand-cyan)" })}" data-v-09f5a294>${ssrInterpolate(__props.jobTitle)}</div></div></div><div style="${ssrRenderStyle({ "margin-bottom": "1.5rem" })}" data-v-09f5a294><h4 style="${ssrRenderStyle({ "font-size": "0.85rem", "text-transform": "uppercase", "color": "var(--text-muted)", "margin-bottom": "0.75rem", "font-weight": "700" })}" data-v-09f5a294> Especificações Técnicas de Fabricação </h4><div style="${ssrRenderStyle({ "display": "grid", "grid-template-columns": "repeat(3, 1fr)", "gap": "0.75rem" })}" data-v-09f5a294><div style="${ssrRenderStyle({ "background": "rgba(0, 0, 0, 0.3)", "padding": "0.75rem", "border-radius": "var(--radius-md)", "border": "1px solid rgba(255, 255, 255, 0.04)" })}" data-v-09f5a294><span style="${ssrRenderStyle({ "font-size": "0.7rem", "color": "var(--text-dim)", "text-transform": "uppercase" })}" data-v-09f5a294>Material(is)</span><div style="${ssrRenderStyle({ "font-weight": "700", "font-size": "0.95rem", "color": "var(--text-main)" })}" data-v-09f5a294>${ssrInterpolate(__props.materialList)}</div></div><div style="${ssrRenderStyle({ "background": "rgba(0, 0, 0, 0.3)", "padding": "0.75rem", "border-radius": "var(--radius-md)", "border": "1px solid rgba(255, 255, 255, 0.04)" })}" data-v-09f5a294><span style="${ssrRenderStyle({ "font-size": "0.7rem", "color": "var(--text-dim)", "text-transform": "uppercase" })}" data-v-09f5a294>Peso Estimado</span><div class="font-mono" style="${ssrRenderStyle({ "font-weight": "700", "font-size": "0.95rem", "color": "var(--text-main)" })}" data-v-09f5a294>${ssrInterpolate(__props.totalGrams)} gramas </div></div><div style="${ssrRenderStyle({ "background": "rgba(0, 0, 0, 0.3)", "padding": "0.75rem", "border-radius": "var(--radius-md)", "border": "1px solid rgba(255, 255, 255, 0.04)" })}" data-v-09f5a294><span style="${ssrRenderStyle({ "font-size": "0.7rem", "color": "var(--text-dim)", "text-transform": "uppercase" })}" data-v-09f5a294>Prazo Médio</span><div style="${ssrRenderStyle({ "font-weight": "700", "font-size": "0.95rem", "color": "var(--text-main)" })}" data-v-09f5a294>${ssrInterpolate(__props.printHours <= 5 ? "1 a 2 dias úteis" : "2 a 4 dias úteis")}</div></div></div></div>`);
         if (__props.notes) {
-          _push(`<div style="${ssrRenderStyle({ "margin-bottom": "1.5rem", "font-size": "0.825rem", "color": "var(--text-muted)", "background": "rgba(0, 240, 255, 0.03)", "border-left": "3px solid var(--brand-cyan)", "padding": "0.75rem" })}"><strong>Detalhes &amp; Acabamento:</strong> ${ssrInterpolate(__props.notes)}</div>`);
+          _push(`<div style="${ssrRenderStyle({ "margin-bottom": "1.5rem", "font-size": "0.825rem", "color": "var(--text-muted)", "background": "rgba(0, 240, 255, 0.03)", "border-left": "3px solid var(--brand-cyan)", "padding": "0.75rem" })}" data-v-09f5a294><strong data-v-09f5a294>Detalhes &amp; Acabamento:</strong> ${ssrInterpolate(__props.notes)}</div>`);
         } else {
           _push(`<!---->`);
         }
-        _push(`<div style="${ssrRenderStyle({ "background": "linear-gradient(135deg, rgba(0, 240, 255, 0.06), rgba(16, 185, 129, 0.08))", "border": "1px solid rgba(0, 240, 255, 0.2)", "border-radius": "var(--radius-md)", "padding": "1.25rem", "display": "flex", "justify-content": "space-between", "align-items": "center" })}"><div><div style="${ssrRenderStyle({ "font-size": "0.8rem", "color": "var(--brand-emerald)", "text-transform": "uppercase", "font-weight": "700" })}"> Investimento Total </div><div style="${ssrRenderStyle({ "font-size": "0.775rem", "color": "var(--text-muted)" })}"> Inclui matéria-prima de primeira linha, inspeção de qualidade e acabamento. </div></div><div style="${ssrRenderStyle({ "text-align": "right" })}"><div class="font-mono" style="${ssrRenderStyle({ "font-size": "2.2rem", "font-weight": "800", "color": "#fff", "line-height": "1" })}"> R$ ${ssrInterpolate(__props.finalPrice.toFixed(2))}</div><span style="${ssrRenderStyle({ "font-size": "0.75rem", "color": "var(--brand-emerald)", "font-weight": "600" })}"> À vista via PIX ou em até 3x no cartão </span></div></div></div><div style="${ssrRenderStyle({ "display": "flex", "justify-content": "space-between", "align-items": "center", "gap": "0.75rem", "flex-wrap": "wrap" })}"><div style="${ssrRenderStyle({ "font-size": "0.8rem", "color": "var(--text-dim)" })}"> Ideal para enviar no WhatsApp ou gerar orçamento em PDF. </div><div style="${ssrRenderStyle({ "display": "flex", "gap": "0.75rem" })}"><button id="btn-copy-proposal-text" class="btn btn-secondary"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> ${ssrInterpolate(copied.value ? "Texto Copiado!" : "Copiar p/ WhatsApp")}</button><button id="btn-print-proposal" class="btn btn-primary"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg> Imprimir / Salvar PDF </button></div></div></div></div>`);
+        _push(`<div style="${ssrRenderStyle({ "background": "linear-gradient(135deg, rgba(0, 240, 255, 0.06), rgba(16, 185, 129, 0.08))", "border": "1px solid rgba(0, 240, 255, 0.2)", "border-radius": "var(--radius-md)", "padding": "1.25rem", "display": "flex", "justify-content": "space-between", "align-items": "center", "margin-bottom": "1.25rem" })}" data-v-09f5a294><div data-v-09f5a294><div style="${ssrRenderStyle({ "font-size": "0.8rem", "color": "var(--brand-emerald)", "text-transform": "uppercase", "font-weight": "700" })}" data-v-09f5a294> Investimento Total </div><div style="${ssrRenderStyle({ "font-size": "0.775rem", "color": "var(--text-muted)" })}" data-v-09f5a294> Inclui matéria-prima de primeira linha, inspeção de qualidade e acabamento. </div></div><div style="${ssrRenderStyle({ "text-align": "right" })}" data-v-09f5a294><div class="font-mono" style="${ssrRenderStyle({ "font-size": "2.2rem", "font-weight": "800", "color": "#fff", "line-height": "1" })}" data-v-09f5a294> R$ ${ssrInterpolate(__props.finalPrice.toFixed(2))}</div><span style="${ssrRenderStyle({ "font-size": "0.75rem", "color": "var(--brand-emerald)", "font-weight": "600" })}" data-v-09f5a294> À vista via PIX ou em até 3x no cartão </span></div></div><div class="pix-proposal-box" style="${ssrRenderStyle({ "background": "rgba(0, 0, 0, 0.45)", "border": "1px solid rgba(0, 240, 255, 0.25)", "border-radius": "var(--radius-md)", "padding": "1.25rem" })}" data-v-09f5a294><div style="${ssrRenderStyle({ "display": "flex", "justify-content": "space-between", "align-items": "center", "margin-bottom": "1rem", "border-bottom": "1px solid rgba(255, 255, 255, 0.08)", "padding-bottom": "0.65rem" })}" data-v-09f5a294><div style="${ssrRenderStyle({ "display": "flex", "align-items": "center", "gap": "0.6rem" })}" data-v-09f5a294><span style="${ssrRenderStyle({ "font-size": "1.2rem" })}" data-v-09f5a294>⚡</span><div data-v-09f5a294><strong style="${ssrRenderStyle({ "color": "#fff", "font-size": "0.95rem" })}" data-v-09f5a294>Pagamento Instantâneo via PIX</strong><div style="${ssrRenderStyle({ "font-size": "0.75rem", "color": "var(--text-dim)" })}" data-v-09f5a294>Aponte a câmera do seu banco para o QR Code abaixo</div></div></div><button type="button" class="btn btn-secondary btn-sm no-print" style="${ssrRenderStyle({ "font-size": "0.725rem", "padding": "0.2rem 0.5rem" })}" data-v-09f5a294>${ssrInterpolate(isEditingPix.value ? "Concluir Edição" : "⚙️ Alterar Chave")}</button></div>`);
+        if (isEditingPix.value) {
+          _push(`<div class="no-print" style="${ssrRenderStyle({ "background": "rgba(15, 23, 42, 0.95)", "border": "1px dashed rgba(0, 240, 255, 0.4)", "border-radius": "var(--radius-sm)", "padding": "1rem", "margin-bottom": "1rem" })}" data-v-09f5a294><div style="${ssrRenderStyle({ "display": "flex", "justify-content": "space-between", "align-items": "center", "margin-bottom": "0.75rem" })}" data-v-09f5a294><span style="${ssrRenderStyle({ "font-size": "0.825rem", "font-weight": "700", "color": "var(--brand-cyan)" })}" data-v-09f5a294>Personalizar Chave PIX Desta Proposta</span><button type="button" class="btn btn-secondary btn-sm" style="${ssrRenderStyle({ "font-size": "0.7rem", "padding": "0.2rem 0.6rem", "color": "var(--brand-emerald)", "border-color": "rgba(16, 185, 129, 0.4)" })}" data-v-09f5a294> 💾 Salvar Como Padrão Global </button></div><div style="${ssrRenderStyle({ "display": "grid", "grid-template-columns": "1fr 1.5fr", "gap": "0.75rem", "margin-bottom": "0.75rem" })}" data-v-09f5a294><div data-v-09f5a294><label style="${ssrRenderStyle({ "font-size": "0.725rem", "color": "var(--text-dim)", "display": "block", "margin-bottom": "0.25rem" })}" data-v-09f5a294>Tipo de Chave:</label><select class="input-control" style="${ssrRenderStyle({ "font-size": "0.8rem", "height": "38px" })}" data-v-09f5a294><option value="cpf" data-v-09f5a294${ssrIncludeBooleanAttr(Array.isArray(currentPixKeyType.value) ? ssrLooseContain(currentPixKeyType.value, "cpf") : ssrLooseEqual(currentPixKeyType.value, "cpf")) ? " selected" : ""}>📄 CPF (11 dígitos)</option><option value="cnpj" data-v-09f5a294${ssrIncludeBooleanAttr(Array.isArray(currentPixKeyType.value) ? ssrLooseContain(currentPixKeyType.value, "cnpj") : ssrLooseEqual(currentPixKeyType.value, "cnpj")) ? " selected" : ""}>🏢 CNPJ (14 dígitos)</option><option value="phone" data-v-09f5a294${ssrIncludeBooleanAttr(Array.isArray(currentPixKeyType.value) ? ssrLooseContain(currentPixKeyType.value, "phone") : ssrLooseEqual(currentPixKeyType.value, "phone")) ? " selected" : ""}>📱 Celular (+55...)</option><option value="email" data-v-09f5a294${ssrIncludeBooleanAttr(Array.isArray(currentPixKeyType.value) ? ssrLooseContain(currentPixKeyType.value, "email") : ssrLooseEqual(currentPixKeyType.value, "email")) ? " selected" : ""}>✉️ E-mail</option><option value="random" data-v-09f5a294${ssrIncludeBooleanAttr(Array.isArray(currentPixKeyType.value) ? ssrLooseContain(currentPixKeyType.value, "random") : ssrLooseEqual(currentPixKeyType.value, "random")) ? " selected" : ""}>🔑 Chave Aleatória (EVP)</option></select></div><div data-v-09f5a294><label style="${ssrRenderStyle({ "font-size": "0.725rem", "color": "var(--text-dim)", "display": "block", "margin-bottom": "0.25rem" })}" data-v-09f5a294>Chave PIX:</label><input${ssrRenderAttr("value", currentPixKey.value)} class="input-control font-mono" style="${ssrRenderStyle({ "font-size": "0.8rem", "height": "38px" })}"${ssrRenderAttr("placeholder", getPixPlaceholder(currentPixKeyType.value))} data-v-09f5a294></div></div><div style="${ssrRenderStyle({ "display": "grid", "grid-template-columns": "1.4fr 1fr", "gap": "0.75rem" })}" data-v-09f5a294><div data-v-09f5a294><label style="${ssrRenderStyle({ "font-size": "0.725rem", "color": "var(--text-dim)", "display": "block", "margin-bottom": "0.25rem" })}" data-v-09f5a294>Nome do Titular / Beneficiário:</label><input${ssrRenderAttr("value", currentBeneficiary.value)} class="input-control" style="${ssrRenderStyle({ "font-size": "0.8rem", "height": "38px" })}" placeholder="Nome ou Razão Social" data-v-09f5a294></div><div data-v-09f5a294><label style="${ssrRenderStyle({ "font-size": "0.725rem", "color": "var(--text-dim)", "display": "block", "margin-bottom": "0.25rem" })}" data-v-09f5a294>Cidade:</label><input${ssrRenderAttr("value", currentCity.value)} class="input-control" style="${ssrRenderStyle({ "font-size": "0.8rem", "height": "38px" })}" placeholder="Ex: SAO PAULO" data-v-09f5a294></div></div></div>`);
+        } else {
+          _push(`<!---->`);
+        }
+        _push(`<div style="${ssrRenderStyle({ "display": "flex", "gap": "1.25rem", "align-items": "center", "flex-wrap": "wrap" })}" data-v-09f5a294><div class="pix-qrcode-wrapper" style="${ssrRenderStyle({ "background": "#ffffff", "padding": "0.5rem", "border-radius": "var(--radius-md)", "box-shadow": "0 0 20px rgba(0, 240, 255, 0.15)", "display": "flex", "flex-direction": "column", "align-items": "center", "justify-content": "center", "width": "145px", "height": "145px", "flex-shrink": "0" })}" data-v-09f5a294>`);
+        if (qrCodeDataUrl.value) {
+          _push(`<img${ssrRenderAttr("src", qrCodeDataUrl.value)} alt="QR Code PIX" style="${ssrRenderStyle({ "width": "100%", "height": "100%", "object-fit": "contain", "display": "block" })}" data-v-09f5a294>`);
+        } else {
+          _push(`<div style="${ssrRenderStyle({ "font-size": "0.75rem", "color": "#333", "text-align": "center" })}" data-v-09f5a294> Gerando QR Code... </div>`);
+        }
+        _push(`</div><div style="${ssrRenderStyle({ "flex": "1", "min-width": "240px", "display": "flex", "flex-direction": "column", "gap": "0.65rem" })}" data-v-09f5a294><div style="${ssrRenderStyle({ "display": "flex", "justify-content": "space-between", "align-items": "center", "font-size": "0.8rem" })}" data-v-09f5a294><span style="${ssrRenderStyle({ "color": "var(--text-dim)" })}" data-v-09f5a294>Favorecido:</span><strong style="${ssrRenderStyle({ "color": "var(--text-main)" })}" data-v-09f5a294>${ssrInterpolate(currentBeneficiary.value)}</strong></div><div style="${ssrRenderStyle({ "display": "flex", "justify-content": "space-between", "align-items": "center", "font-size": "0.8rem" })}" data-v-09f5a294><span style="${ssrRenderStyle({ "color": "var(--text-dim)" })}" data-v-09f5a294>Chave PIX:</span><div style="${ssrRenderStyle({ "display": "flex", "align-items": "center", "gap": "0.4rem" })}" data-v-09f5a294><span class="badge badge-cyan" style="${ssrRenderStyle({ "font-size": "0.7rem", "padding": "0.15rem 0.4rem" })}" data-v-09f5a294>${ssrInterpolate(formatKeyTypeBadge(currentPixKeyType.value))}</span><span class="font-mono" style="${ssrRenderStyle({ "color": "var(--brand-cyan)", "font-weight": "600" })}" data-v-09f5a294>${ssrInterpolate(currentPixKey.value)}</span><button type="button" class="btn btn-secondary btn-sm no-print" style="${ssrRenderStyle({ "padding": "0.15rem 0.45rem", "font-size": "0.675rem" })}" data-v-09f5a294>${ssrInterpolate(copiedKey.value ? "Copiada!" : "Copiar")}</button></div></div><div style="${ssrRenderStyle({ "display": "flex", "justify-content": "space-between", "align-items": "center", "font-size": "0.8rem" })}" data-v-09f5a294><span style="${ssrRenderStyle({ "color": "var(--text-dim)" })}" data-v-09f5a294>Valor do PIX:</span><strong class="font-mono text-gradient-emerald" style="${ssrRenderStyle({ "font-size": "1.15rem" })}" data-v-09f5a294>R$ ${ssrInterpolate(__props.finalPrice.toFixed(2))}</strong></div><div style="${ssrRenderStyle({ "margin-top": "0.25rem" })}" data-v-09f5a294><div style="${ssrRenderStyle({ "font-size": "0.725rem", "color": "var(--text-dim)", "margin-bottom": "0.25rem" })}" data-v-09f5a294>Código PIX Copia e Cola:</div><div style="${ssrRenderStyle({ "display": "flex", "gap": "0.4rem" })}" data-v-09f5a294><input type="text" readonly${ssrRenderAttr("value", pixPayload.value)} class="input-control font-mono" style="${ssrRenderStyle({ "font-size": "0.725rem", "height": "32px", "background": "rgba(0, 0, 0, 0.4)", "color": "#94a3b8", "cursor": "pointer" })}" data-v-09f5a294><button id="btn-copy-pix-payload" type="button" class="btn btn-primary btn-sm no-print" style="${ssrRenderStyle({ "flex-shrink": "0", "font-size": "0.75rem", "padding": "0 0.75rem" })}" data-v-09f5a294><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-v-09f5a294><rect x="9" y="9" width="13" height="13" rx="2" ry="2" data-v-09f5a294></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" data-v-09f5a294></path></svg><span data-v-09f5a294>${ssrInterpolate(copiedPayload.value ? "Copiado!" : "Copiar Código PIX")}</span></button></div></div></div></div></div></div><div class="no-print" style="${ssrRenderStyle({ "display": "flex", "justify-content": "space-between", "align-items": "center", "gap": "0.75rem", "flex-wrap": "wrap" })}" data-v-09f5a294><div style="${ssrRenderStyle({ "font-size": "0.8rem", "color": "var(--text-dim)" })}" data-v-09f5a294> Ideal para enviar no WhatsApp com QR Code ou gerar orçamento impresso/PDF. </div><div style="${ssrRenderStyle({ "display": "flex", "gap": "0.75rem" })}" data-v-09f5a294><button id="btn-copy-proposal-text" class="btn btn-secondary" data-v-09f5a294><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-v-09f5a294><rect x="9" y="9" width="13" height="13" rx="2" ry="2" data-v-09f5a294></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" data-v-09f5a294></path></svg> ${ssrInterpolate(copied.value ? "Texto Copiado!" : "Copiar p/ WhatsApp")}</button><button id="btn-print-proposal" class="btn btn-primary" data-v-09f5a294><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" data-v-09f5a294><polyline points="6 9 6 2 18 2 18 9" data-v-09f5a294></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" data-v-09f5a294></path><rect x="6" y="14" width="12" height="8" data-v-09f5a294></rect></svg> Imprimir / Salvar PDF </button></div></div></div></div>`);
       } else {
         _push(`<!---->`);
       }
@@ -1991,6 +2216,7 @@ _sfc_main$3.setup = (props, ctx) => {
   (ssrContext.modules || (ssrContext.modules = /* @__PURE__ */ new Set())).add("components/ClientProposalModal.vue");
   return _sfc_setup$3 ? _sfc_setup$3(props, ctx) : void 0;
 };
+const __nuxt_component_8 = /* @__PURE__ */ _export_sfc(_sfc_main$3, [["__scopeId", "data-v-09f5a294"]]);
 const _sfc_main$2 = /* @__PURE__ */ defineComponent({
   __name: "app",
   __ssrInlineRender: true,
@@ -2112,7 +2338,7 @@ const _sfc_main$2 = /* @__PURE__ */ defineComponent({
       const _component_PlatformFeeManager = _sfc_main$6;
       const _component_PrinterSettingsManager = _sfc_main$5;
       const _component_SavedQuotesManager = _sfc_main$4;
-      const _component_ClientProposalModal = _sfc_main$3;
+      const _component_ClientProposalModal = __nuxt_component_8;
       _push(`<div${ssrRenderAttrs(mergeProps({ class: "app-wrapper" }, _attrs))}>`);
       if (!unref(currentUser2) && !isGuestMode.value) {
         _push(ssrRenderComponent(_component_AuthScreen, {
@@ -2225,8 +2451,8 @@ const _sfc_main$1 = {
     const statusText = _error.statusMessage ?? (is404 ? "Page Not Found" : "Internal Server Error");
     const description = _error.message || _error.toString();
     const stack = void 0;
-    const _Error404 = defineAsyncComponent(() => import('./error-404-BXMmDgtM.mjs'));
-    const _Error = defineAsyncComponent(() => import('./error-500-Cbc209Wa.mjs'));
+    const _Error404 = defineAsyncComponent(() => import('./error-404-9Bf0fvLL.mjs'));
+    const _Error = defineAsyncComponent(() => import('./error-500-Dkt7uXvr.mjs'));
     const ErrorTemplate = is404 ? _Error404 : _Error;
     return (_ctx, _push, _parent, _attrs) => {
       _push(ssrRenderComponent(unref(ErrorTemplate), mergeProps({ status: unref(status), statusText: unref(statusText), statusCode: unref(status), statusMessage: unref(statusText), description: unref(description), stack: unref(stack) }, _attrs), null, _parent));

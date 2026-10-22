@@ -25,6 +25,8 @@ declare global {
   const effect: typeof import('vue').effect
   const effectScope: typeof import('vue').effectScope
   const extractGcodeMetadata: typeof import('../../utils/gcodeParser').extractGcodeMetadata
+  const generatePixPayload: typeof import('../../utils/pixGenerator').generatePixPayload
+  const generatePixQrCodeDataUrl: typeof import('../../utils/pixGenerator').generatePixQrCodeDataUrl
   const getAppManifest: typeof import('../../node_modules/nuxt/dist/app/composables/manifest').getAppManifest
   const getCurrentInstance: typeof import('vue').getCurrentInstance
   const getCurrentScope: typeof import('vue').getCurrentScope
@@ -46,6 +48,7 @@ declare global {
   const markRaw: typeof import('vue').markRaw
   const navigateTo: typeof import('../../node_modules/nuxt/dist/app/composables/router').navigateTo
   const nextTick: typeof import('vue').nextTick
+  const normalizePixKey: typeof import('../../utils/pixGenerator').normalizePixKey
   const onActivated: typeof import('vue').onActivated
   const onBeforeMount: typeof import('vue').onBeforeMount
   const onBeforeRouteLeave: typeof import('../../node_modules/nuxt/dist/app/composables/router').onBeforeRouteLeave
@@ -198,6 +201,9 @@ declare global {
   // @ts-ignore
   export type { ParsedGcodeResult } from '../../utils/gcodeParser'
   import('../../utils/gcodeParser')
+  // @ts-ignore
+  export type { PixKeyType, PixConfig } from '../../utils/pixGenerator'
+  import('../../utils/pixGenerator')
 }
 // for vue template auto import
 import { UnwrapRef } from 'vue'
@@ -227,6 +233,8 @@ declare module 'vue' {
     readonly effect: UnwrapRef<typeof import('vue')['effect']>
     readonly effectScope: UnwrapRef<typeof import('vue')['effectScope']>
     readonly extractGcodeMetadata: UnwrapRef<typeof import('../../utils/gcodeParser')['extractGcodeMetadata']>
+    readonly generatePixPayload: UnwrapRef<typeof import('../../utils/pixGenerator')['generatePixPayload']>
+    readonly generatePixQrCodeDataUrl: UnwrapRef<typeof import('../../utils/pixGenerator')['generatePixQrCodeDataUrl']>
     readonly getAppManifest: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/manifest')['getAppManifest']>
     readonly getCurrentInstance: UnwrapRef<typeof import('vue')['getCurrentInstance']>
     readonly getCurrentScope: UnwrapRef<typeof import('vue')['getCurrentScope']>
@@ -248,6 +256,7 @@ declare module 'vue' {
     readonly markRaw: UnwrapRef<typeof import('vue')['markRaw']>
     readonly navigateTo: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/router')['navigateTo']>
     readonly nextTick: UnwrapRef<typeof import('vue')['nextTick']>
+    readonly normalizePixKey: UnwrapRef<typeof import('../../utils/pixGenerator')['normalizePixKey']>
     readonly onActivated: UnwrapRef<typeof import('vue')['onActivated']>
     readonly onBeforeMount: UnwrapRef<typeof import('vue')['onBeforeMount']>
     readonly onBeforeRouteLeave: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/router')['onBeforeRouteLeave']>

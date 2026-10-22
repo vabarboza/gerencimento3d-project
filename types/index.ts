@@ -33,6 +33,10 @@ export interface GlobalSettings {
   defaultProfitMargin: number // % de margem de lucro desejada (ex: 60%)
   taxRatePercent: number // % de imposto (MEI, Simples Nacional, ex: 6%)
   currency: string
+  pixKey?: string // Chave PIX (CPF, CNPJ, Email, Celular ou Aleatória)
+  pixKeyType?: 'cpf' | 'cnpj' | 'email' | 'phone' | 'random'
+  pixBeneficiaryName?: string // Nome do Titular / Razão Social
+  pixBeneficiaryCity?: string // Cidade do titular
 }
 
 export interface PlatformFeeConfig {

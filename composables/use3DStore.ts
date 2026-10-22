@@ -153,7 +153,11 @@ const DEFAULT_SETTINGS: GlobalSettings = {
   defaultFailureRate: 8,       // 8% margem de falha
   defaultProfitMargin: 65,     // 65% de lucro líquido alvo
   taxRatePercent: 5.0,         // 5% imposto MEI / Simples
-  currency: 'BRL'
+  currency: 'BRL',
+  pixKey: 'financeiro@print3d.com',
+  pixKeyType: 'email',
+  pixBeneficiaryName: 'PRINT3D STUDIO',
+  pixBeneficiaryCity: 'SAO PAULO'
 }
 
 const DEFAULT_PLATFORMS: PlatformFeeConfig[] = [
