@@ -437,7 +437,310 @@ const copyWhatsAppProposal = () => {
 }
 
 const handlePrint = () => {
-  window.print()
+  // Create an isolated hidden iframe so ONLY the proposal card is sent to the printer/PDF
+  const iframe = document.createElement('iframe')
+  iframe.style.position = 'fixed'
+  iframe.style.right = '0'
+  iframe.style.bottom = '0'
+  iframe.style.width = '0'
+  iframe.style.height = '0'
+  iframe.style.border = '0'
+  document.body.appendChild(iframe)
+
+  const doc = iframe.contentWindow?.document
+  if (!doc) return
+
+  doc.open()
+  doc.write(`
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="utf-8">
+      <title>Proposta Comercial - ${props.jobTitle}</title>
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+      <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+          font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+          color: #0f172a;
+          background: #ffffff;
+          padding: 1.5cm;
+          line-height: 1.5;
+        }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .proposal-paper {
+          max-width: 800px;
+          margin: 0 auto;
+          background: #ffffff;
+        }
+        .header-brand {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          border-bottom: 2px solid #0284c7;
+          padding-bottom: 1.25rem;
+          margin-bottom: 1.5rem;
+        }
+        .brand-title {
+          font-size: 1.5rem;
+          font-weight: 800;
+          color: #0f172a;
+          letter-spacing: -0.02em;
+        }
+        .brand-sub {
+          font-size: 0.825rem;
+          color: #0284c7;
+          font-weight: 700;
+        }
+        .header-meta {
+          text-align: right;
+          font-size: 0.8rem;
+          color: #64748b;
+        }
+        .info-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1.25rem;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          padding: 1.25rem;
+          margin-bottom: 1.5rem;
+        }
+        .info-label {
+          font-size: 0.725rem;
+          text-transform: uppercase;
+          color: #64748b;
+          font-weight: 700;
+          margin-bottom: 0.25rem;
+        }
+        .info-value {
+          font-size: 1.1rem;
+          font-weight: 700;
+          color: #0f172a;
+        }
+        .specs-title {
+          font-size: 0.85rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          color: #475569;
+          margin-bottom: 0.75rem;
+        }
+        .specs-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 0.75rem;
+          margin-bottom: 1.5rem;
+        }
+        .specs-card {
+          border: 1px solid #e2e8f0;
+          background: #f8fafc;
+          padding: 0.85rem;
+          border-radius: 8px;
+        }
+        .notes-box {
+          background: #f0fdfa;
+          border-left: 4px solid #0d9488;
+          padding: 0.85rem 1rem;
+          border-radius: 4px;
+          margin-bottom: 1.5rem;
+          font-size: 0.85rem;
+          color: #134e4a;
+        }
+        .price-box {
+          background: #f0fdf4;
+          border: 1.5px solid #16a34a;
+          border-radius: 10px;
+          padding: 1.25rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1.5rem;
+        }
+        .price-total {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 2.2rem;
+          font-weight: 800;
+          color: #15803d;
+          line-height: 1;
+        }
+        .pix-box {
+          border: 1.5px dashed #0284c7;
+          border-radius: 10px;
+          background: #f8fafc;
+          padding: 1.25rem;
+        }
+        .pix-header {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          margin-bottom: 1rem;
+          padding-bottom: 0.5rem;
+          border-bottom: 1px solid #e2e8f0;
+        }
+        .pix-content {
+          display: flex;
+          gap: 1.5rem;
+          align-items: center;
+        }
+        .pix-qr {
+          width: 140px;
+          height: 140px;
+          background: #ffffff;
+          border: 1px solid #cbd5e1;
+          border-radius: 8px;
+          padding: 0.35rem;
+          flex-shrink: 0;
+        }
+        .pix-qr img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          display: block;
+        }
+        .pix-details {
+          flex: 1;
+          font-size: 0.85rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.45rem;
+        }
+        .pix-copia-cola {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 0.72rem;
+          background: #ffffff;
+          border: 1px solid #cbd5e1;
+          border-radius: 6px;
+          padding: 0.5rem;
+          word-break: break-all;
+          color: #334155;
+          margin-top: 0.25rem;
+        }
+        .footer-note {
+          margin-top: 2rem;
+          text-align: center;
+          font-size: 0.775rem;
+          color: #94a3b8;
+          border-top: 1px solid #e2e8f0;
+          padding-top: 1rem;
+        }
+        @page {
+          size: A4 portrait;
+          margin: 1cm;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="proposal-paper">
+        <div class="header-brand">
+          <div>
+            <div class="brand-title">STUDIO 3D • PROPOSTA COMERCIAL</div>
+            <div class="brand-sub">Manufatura Aditiva & Prototipagem de Alta Precisão</div>
+          </div>
+          <div class="header-meta">
+            <div>Data: <strong>${formattedDate.value}</strong></div>
+            <div>Validade: <strong>10 dias</strong></div>
+          </div>
+        </div>
+
+        <div class="info-grid">
+          <div>
+            <div class="info-label">Cliente</div>
+            <div class="info-value">${props.clientName || 'Cliente Particular'}</div>
+          </div>
+          <div>
+            <div class="info-label">Projeto / Peça</div>
+            <div class="info-value" style="color: #0284c7;">${props.jobTitle}</div>
+          </div>
+        </div>
+
+        <div class="specs-title">Especificações Técnicas de Fabricação</div>
+        <div class="specs-grid">
+          <div class="specs-card">
+            <div class="info-label">Material(is)</div>
+            <div style="font-weight: 700; font-size: 0.95rem;">${props.materialList}</div>
+          </div>
+          <div class="specs-card">
+            <div class="info-label">Peso Estimado</div>
+            <div class="font-mono" style="font-weight: 700; font-size: 0.95rem;">${props.totalGrams} gramas</div>
+          </div>
+          <div class="specs-card">
+            <div class="info-label">Prazo de Produção</div>
+            <div style="font-weight: 700; font-size: 0.95rem;">${props.printHours <= 5 ? '1 a 2 dias úteis' : '2 a 4 dias úteis'}</div>
+          </div>
+        </div>
+
+        ${props.notes ? `
+        <div class="notes-box">
+          <strong>Detalhes & Acabamento:</strong> ${props.notes}
+        </div>` : ''}
+
+        <div class="price-box">
+          <div>
+            <div style="font-size: 0.8rem; text-transform: uppercase; color: #15803d; font-weight: 700;">Investimento Total</div>
+            <div style="font-size: 0.8rem; color: #64748b;">Inclui matéria-prima de primeira linha, inspeção de qualidade e acabamento.</div>
+          </div>
+          <div style="text-align: right;">
+            <div class="price-total">R$ ${props.finalPrice.toFixed(2)}</div>
+            <div style="font-size: 0.775rem; color: #16a34a; font-weight: 600;">À vista via PIX</div>
+          </div>
+        </div>
+
+        <div class="pix-box">
+          <div class="pix-header">
+            <span style="font-size: 1.2rem;">⚡</span>
+            <div>
+              <strong style="color: #0f172a; font-size: 0.95rem;">Pagamento Instantâneo via PIX</strong>
+              <div style="font-size: 0.75rem; color: #64748b;">Aponte a câmera do aplicativo do seu banco para o QR Code</div>
+            </div>
+          </div>
+
+          <div class="pix-content">
+            <div class="pix-qr">
+              <img src="${qrCodeDataUrl.value}" alt="QR Code PIX" />
+            </div>
+
+            <div class="pix-details">
+              <div>
+                <span style="color: #64748b;">Favorecido:</span> <strong>${currentBeneficiary.value}</strong>
+              </div>
+              <div>
+                <span style="color: #64748b;">Chave PIX (${formatKeyTypeBadge(currentPixKeyType.value)}):</span>
+                <strong class="font-mono" style="color: #0284c7;">${currentPixKey.value}</strong>
+              </div>
+              <div>
+                <span style="color: #64748b;">Valor do PIX:</span> <strong class="font-mono" style="color: #15803d; font-size: 1.05rem;">R$ ${props.finalPrice.toFixed(2)}</strong>
+              </div>
+
+              <div>
+                <span style="color: #64748b; font-size: 0.75rem;">Código PIX Copia e Cola:</span>
+                <div class="pix-copia-cola">${pixPayload.value}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-note">
+          Proposta emitida por Print3D Pro Hub • Documento válido para fechamento de pedido.
+        </div>
+      </div>
+    </body>
+    </html>
+  `)
+  doc.close()
+
+  // Wait for document and images to render, then trigger print
+  setTimeout(() => {
+    iframe.contentWindow?.focus()
+    iframe.contentWindow?.print()
+    setTimeout(() => {
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe)
+      }
+    }, 1500)
+  }, 350)
 }
 </script>
 

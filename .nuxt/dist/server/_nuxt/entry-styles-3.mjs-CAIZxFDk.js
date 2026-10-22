@@ -1,0 +1,5 @@
+const ClientProposalModal_vue_vue_type_style_index_0_scoped_0b081466_inline_used_lang = "@media print{body{background:#fff!important;color:#111827!important}.modal-backdrop[data-v-0b081466]{background:transparent!important;padding:0!important;position:static!important}.modal-content[data-v-0b081466]{background:#fff!important;border:none!important;box-shadow:none!important;color:#111827!important;max-width:100%!important;padding:0!important}.card-header[data-v-0b081466],.no-print[data-v-0b081466]{display:none!important}#proposal-printable-card[data-v-0b081466]{background:#fff!important;border:1px solid #cbd5e1!important;color:#111827!important}#proposal-printable-card[data-v-0b081466] *{color:#111827!important;text-shadow:none!important}.pix-proposal-box[data-v-0b081466]{background:#f8fafc!important;border:1px solid #cbd5e1!important}.pix-qrcode-wrapper[data-v-0b081466]{border:1px solid #000!important;box-shadow:none!important}}";
+export {
+  ClientProposalModal_vue_vue_type_style_index_0_scoped_0b081466_inline_used_lang as default
+};
+//# sourceMappingURL=entry-styles-3.mjs-CAIZxFDk.js.map
