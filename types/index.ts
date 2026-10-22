@@ -33,6 +33,15 @@ export interface GlobalSettings {
   defaultProfitMargin: number // % de margem de lucro desejada (ex: 60%)
   taxRatePercent: number // % de imposto (MEI, Simples Nacional, ex: 6%)
   currency: string
+  // Store / Perfil Comercial da Loja
+  storeName?: string // Nome da Loja / Razão Social
+  storeSubtitle?: string // Slogan ou especialidade
+  storeLogo?: string // Imagem 1:1 em Base64
+  storeDocument?: string // CNPJ ou CPF
+  storePhone?: string // Telefone / WhatsApp comercial
+  storeEmail?: string // E-mail de contato
+  storeAddress?: string // Cidade, Estado ou Endereço
+  // Configuração PIX
   pixKey?: string // Chave PIX (CPF, CNPJ, Email, Celular ou Aleatória)
   pixKeyType?: 'cpf' | 'cnpj' | 'email' | 'phone' | 'random'
   pixBeneficiaryName?: string // Nome do Titular / Razão Social

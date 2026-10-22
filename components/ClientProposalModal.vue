@@ -19,17 +19,30 @@
       <!-- Printable Area -->
       <div id="proposal-printable-card" style="padding: 1.5rem; background: #070a12; border-radius: var(--radius-lg); border: 1px solid rgba(255, 255, 255, 0.06); margin-bottom: 1.5rem;">
         <!-- Brand Header inside proposal -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.06); padding-bottom: 1rem;">
-          <div>
-            <div style="font-size: 1.4rem; font-weight: 800; color: #fff; letter-spacing: -0.02em;">
-              STUDIO 3D • PROPOSTA COMERCIAL
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.06); padding-bottom: 1rem; gap: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.85rem; min-width: 0;">
+            <!-- 1:1 Store Logo if configured -->
+            <div 
+              v-if="settings.storeLogo" 
+              style="width: 52px; height: 52px; border-radius: var(--radius-md); overflow: hidden; border: 1px solid rgba(0, 240, 255, 0.35); flex-shrink: 0; background: #070c18; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);"
+            >
+              <img :src="settings.storeLogo" alt="Logo" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
             </div>
-            <div style="font-size: 0.8rem; color: var(--brand-cyan); font-weight: 600;">
-              Manufatura Aditiva & Prototipagem de Alta Precisão
+
+            <div style="min-width: 0;">
+              <div style="font-size: 1.3rem; font-weight: 800; color: #fff; letter-spacing: -0.02em; line-height: 1.2;">
+                {{ storeDisplayName.toUpperCase() }} • PROPOSTA COMERCIAL
+              </div>
+              <div style="font-size: 0.8rem; color: var(--brand-cyan); font-weight: 600; line-height: 1.25; margin-top: 0.15rem;">
+                {{ storeDisplaySubtitle }}
+              </div>
+              <div v-if="storeContactSummary" style="font-size: 0.7rem; color: var(--text-dim); margin-top: 0.25rem;">
+                {{ storeContactSummary }}
+              </div>
             </div>
           </div>
 
-          <div style="text-align: right; font-size: 0.8rem; color: var(--text-dim);">
+          <div style="text-align: right; font-size: 0.8rem; color: var(--text-dim); flex-shrink: 0;">
             <div>Data: <strong>{{ formattedDate }}</strong></div>
             <div>Validade: <strong>10 dias</strong></div>
           </div>
@@ -337,6 +350,23 @@ const formattedDate = computed(() => {
   return new Date().toLocaleDateString('pt-BR')
 })
 
+const storeDisplayName = computed(() => {
+  return (settings.storeName || 'STUDIO 3D').trim()
+})
+
+const storeDisplaySubtitle = computed(() => {
+  return (settings.storeSubtitle || 'Manufatura Aditiva & Prototipagem de Alta Precisão').trim()
+})
+
+const storeContactSummary = computed(() => {
+  const parts: string[] = []
+  if (settings.storeDocument) parts.push(`Doc: ${settings.storeDocument}`)
+  if (settings.storePhone) parts.push(`Tel: ${settings.storePhone}`)
+  if (settings.storeEmail) parts.push(settings.storeEmail)
+  if (settings.storeAddress) parts.push(settings.storeAddress)
+  return parts.join(' • ')
+})
+
 const getPixPlaceholder = (type?: string) => {
   switch (type) {
     case 'cpf': return 'Ex: 123.456.789-00'
@@ -409,7 +439,10 @@ const copyText = (text: string, type: 'key' | 'payload') => {
 
 const copyWhatsAppProposal = () => {
   const text = [
-    `*PROPOSTA DE IMPRESSÃO 3D* 🖨️✨`,
+    `*${storeDisplayName.value.toUpperCase()} • PROPOSTA DE IMPRESSÃO 3D* 🖨️✨`,
+    settings.storeSubtitle ? `_${settings.storeSubtitle}_` : '',
+    settings.storePhone ? `📞 Contato: ${settings.storePhone}` : '',
+    ``,
     `Olá ${props.clientName ? props.clientName : ''}! Segue a estimativa para o seu projeto:`,
     ``,
     `📌 *Projeto:* ${props.jobTitle}`,
@@ -437,6 +470,14 @@ const copyWhatsAppProposal = () => {
 }
 
 const handlePrint = () => {
+  const logoHtml = settings.storeLogo
+    ? `<img src="${settings.storeLogo}" style="width: 52px; height: 52px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1; flex-shrink: 0;" alt="Logo" />`
+    : ''
+
+  const contactHtml = storeContactSummary.value
+    ? `<div style="font-size: 0.72rem; color: #64748b; margin-top: 3px;">${storeContactSummary.value}</div>`
+    : ''
+
   // Create an isolated hidden iframe so ONLY the proposal card is sent to the printer/PDF
   const iframe = document.createElement('iframe')
   iframe.style.position = 'fixed'
@@ -646,9 +687,13 @@ const handlePrint = () => {
     <body>
       <div class="proposal-paper">
         <div class="header-brand">
-          <div>
-            <div class="brand-title">STUDIO 3D • PROPOSTA COMERCIAL</div>
-            <div class="brand-sub">Manufatura Aditiva & Prototipagem de Alta Precisão</div>
+          <div style="display: flex; align-items: center; gap: 0.85rem;">
+            ${logoHtml}
+            <div>
+              <div class="brand-title">${storeDisplayName.value.toUpperCase()} • PROPOSTA COMERCIAL</div>
+              <div class="brand-sub">${storeDisplaySubtitle.value}</div>
+              ${contactHtml}
+            </div>
           </div>
           <div class="header-meta">
             <div>Data: <strong>${formattedDate.value}</strong></div>
@@ -734,7 +779,7 @@ const handlePrint = () => {
         </div>
 
         <div class="footer-note">
-          Proposta emitida por Print3D Pro Hub • Documento válido para fechamento de pedido.
+          Proposta emitida por ${storeDisplayName.value} • Documento válido para fechamento de pedido.
         </div>
       </div>
     </body>

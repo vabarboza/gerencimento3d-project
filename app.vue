@@ -62,6 +62,11 @@
           <PrinterSettingsManager />
         </div>
 
+        <!-- Tab 5: Store Profile & PIX Settings -->
+        <div v-if="currentTab === 'store'">
+          <StoreSettingsManager />
+        </div>
+
         <!-- Tab 5: Saved Quotes History -->
         <div v-if="currentTab === 'quotes'">
           <SavedQuotesManager 

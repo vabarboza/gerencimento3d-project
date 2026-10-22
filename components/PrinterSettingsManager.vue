@@ -142,75 +142,6 @@
             <span style="font-size: 0.75rem; color: var(--text-dim);">Para MEI use 0% a 3%. Para Simples use 4% a 8%.</span>
           </div>
 
-          <!-- Pix Default Config for Proposals -->
-          <div style="border-top: 1px solid var(--border-subtle); padding-top: 1.25rem; margin-top: 1.25rem;">
-            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.85rem;">
-              <span style="font-size: 1.1rem;">📱</span>
-              <span style="font-size: 0.95rem; font-weight: 700; color: var(--text-main);">Chave PIX para Propostas</span>
-            </div>
-
-            <!-- Tipo de Chave PIX -->
-            <div class="form-group">
-              <label class="form-label" for="sett-pix-type">Tipo de Chave PIX</label>
-              <select 
-                id="sett-pix-type"
-                v-model="settings.pixKeyType" 
-                class="input-control"
-                @change="handleSaveSettings"
-              >
-                <option value="cpf">📄 CPF (11 dígitos)</option>
-                <option value="cnpj">🏢 CNPJ (14 dígitos)</option>
-                <option value="phone">📱 Celular / WhatsApp (+55 DDD...)</option>
-                <option value="email">✉️ E-mail</option>
-                <option value="random">🔑 Chave Aleatória (EVP)</option>
-              </select>
-            </div>
-
-            <!-- Chave PIX -->
-            <div class="form-group">
-              <label class="form-label" for="sett-pix-key">Chave PIX</label>
-              <input 
-                id="sett-pix-key"
-                v-model="settings.pixKey" 
-                type="text" 
-                class="input-control font-mono" 
-                :placeholder="getPixKeyPlaceholder(settings.pixKeyType)"
-                @input="handleSaveSettings"
-                @change="handleSaveSettings"
-              />
-              <span style="font-size: 0.725rem; color: var(--text-dim); margin-top: 0.25rem; display: block;">
-                {{ getPixKeyHelper(settings.pixKeyType) }}
-              </span>
-            </div>
-
-            <!-- Nome do Titular -->
-            <div class="form-group">
-              <label class="form-label" for="sett-pix-name">Nome do Titular / Beneficiário</label>
-              <input 
-                id="sett-pix-name"
-                v-model="settings.pixBeneficiaryName" 
-                type="text" 
-                class="input-control" 
-                placeholder="Ex: SEU NOME OU EMPRESA"
-                @change="handleSaveSettings"
-              />
-            </div>
-
-            <!-- Cidade do Titular -->
-            <div class="form-group" style="margin-bottom: 0.5rem;">
-              <label class="form-label" for="sett-pix-city">Cidade</label>
-              <input 
-                id="sett-pix-city"
-                v-model="settings.pixBeneficiaryCity" 
-                type="text" 
-                class="input-control" 
-                placeholder="Ex: SAO PAULO"
-                @change="handleSaveSettings"
-              />
-            </div>
-            <span style="font-size: 0.725rem; color: var(--text-dim);">Utilizado para gerar o QR Code dinâmico e o código Copia e Cola nas propostas de clientes.</span>
-          </div>
-
           <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: var(--radius-md); padding: 0.75rem; margin-top: 1rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--brand-emerald);">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="20 6 9 17 4 12"></polyline>
@@ -489,28 +420,6 @@ const form = reactive<Omit<Printer, 'id'>>({ ...defaultForm })
 
 const handleSaveSettings = () => {
   saveSettings()
-}
-
-const getPixKeyPlaceholder = (type?: string) => {
-  switch (type) {
-    case 'cpf': return 'Ex: 123.456.789-00 ou 12345678900'
-    case 'cnpj': return 'Ex: 12.345.678/0001-90'
-    case 'phone': return 'Ex: (11) 98765-4321 ou 11987654321'
-    case 'email': return 'Ex: financeiro@suaempresa.com.br'
-    case 'random': return 'Ex: 123e4567-e89b-12d3-a456-426614174000'
-    default: return 'Digite sua Chave PIX'
-  }
-}
-
-const getPixKeyHelper = (type?: string) => {
-  switch (type) {
-    case 'cpf': return 'O sistema limpa pontos e traços para atender a norma do Banco Central.'
-    case 'cnpj': return 'O sistema limpa barras, pontos e traços automaticamente.'
-    case 'phone': return 'O sistema insere o prefixo internacional (+55) automaticamente.'
-    case 'email': return 'Certifique-se de que o e-mail cadastrado no seu banco está correto.'
-    case 'random': return 'Chave aleatória gerada pelo seu banco (código UUID de 36 caracteres).'
-    default: return ''
-  }
 }
 
 const openAddPrinterModal = () => {

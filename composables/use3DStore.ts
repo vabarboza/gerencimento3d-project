@@ -154,6 +154,13 @@ const DEFAULT_SETTINGS: GlobalSettings = {
   defaultProfitMargin: 65,     // 65% de lucro líquido alvo
   taxRatePercent: 5.0,         // 5% imposto MEI / Simples
   currency: 'BRL',
+  storeName: 'STUDIO 3D',
+  storeSubtitle: 'Manufatura Aditiva & Prototipagem de Alta Precisão',
+  storeLogo: '',
+  storeDocument: '',
+  storePhone: '',
+  storeEmail: 'contato@studio3d.com.br',
+  storeAddress: 'São Paulo - SP',
   pixKey: 'financeiro@print3d.com',
   pixKeyType: 'email',
   pixBeneficiaryName: 'PRINT3D STUDIO',
