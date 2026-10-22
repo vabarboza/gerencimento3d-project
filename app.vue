@@ -47,6 +47,11 @@
           <PlatformSimulator />
         </div>
 
+        <!-- Tab: Financial Dashboard & Business Intelligence (BI) -->
+        <div v-if="currentTab === 'dashboard'">
+          <FinancialDashboard />
+        </div>
+
         <!-- Tab 2: Filament Inventory & Pricing Manager -->
         <div v-if="currentTab === 'filaments'">
           <FilamentManager />

@@ -282,6 +282,120 @@ const DEFAULT_PLATFORMS: PlatformFeeConfig[] = [
   }
 ]
 
+const DEFAULT_SAVED_QUOTES: SavedQuote[] = [
+  {
+    id: 'quote-seed-1',
+    title: 'Luminária Lua 3D 15cm c/ Base de Madeira',
+    clientName: 'Mariana Silva (Instagram)',
+    printerId: 'p-1',
+    filaments: [{ filamentId: 'f-2', grams: 140 }],
+    printTimeHours: 6,
+    printTimeMinutes: 30,
+    prepTimeMinutes: 15,
+    packagingCost: 4.50,
+    hardwareCost: 12.00,
+    notes: 'Infill 100% litofania, bico 0.4mm, camada 0.16mm.',
+    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'concluido',
+    isDeductedFromStock: true,
+    selectedPlatformPrice: {
+      platformName: 'Venda Direta / WhatsApp / PIX',
+      price: 89.90,
+      profit: 48.60
+    },
+    breakdown: {
+      filamentCost: 15.39,
+      energyCost: 1.50,
+      depreciationCost: 3.25,
+      maintenanceCost: 3.25,
+      laborCost: 8.75,
+      packagingCost: 4.50,
+      hardwareCost: 12.00,
+      failureRiskCost: 3.20,
+      totalProductionCost: 41.30,
+      recommendedDirectPrice: 89.90,
+      directProfit: 48.60,
+      directMarginPercent: 54.1,
+      totalGrams: 140,
+      totalPrintHours: 6.5
+    }
+  },
+  {
+    id: 'quote-seed-2',
+    title: 'Suporte Articulado para Headset Gamer',
+    clientName: 'Lucas Ramos',
+    printerId: 'p-1',
+    filaments: [{ filamentId: 'f-1', grams: 95 }],
+    printTimeHours: 4,
+    printTimeMinutes: 15,
+    prepTimeMinutes: 15,
+    packagingCost: 3.50,
+    hardwareCost: 2.00,
+    notes: 'Preenchimento 25% Gyroid, 4 paredes para rigidez.',
+    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'concluido',
+    isDeductedFromStock: true,
+    selectedPlatformPrice: {
+      platformName: 'Mercado Livre Clássico',
+      price: 68.90,
+      profit: 32.40
+    },
+    breakdown: {
+      filamentCost: 9.98,
+      energyCost: 0.98,
+      depreciationCost: 2.13,
+      maintenanceCost: 2.13,
+      laborCost: 8.75,
+      packagingCost: 3.50,
+      hardwareCost: 2.00,
+      failureRiskCost: 2.30,
+      totalProductionCost: 28.50,
+      recommendedDirectPrice: 68.90,
+      directProfit: 40.40,
+      directMarginPercent: 58.6,
+      totalGrams: 95,
+      totalPrintHours: 4.25
+    }
+  },
+  {
+    id: 'quote-seed-3',
+    title: 'Vaso Geométrico Espiral Low-Poly',
+    clientName: 'Studio Arquitetura',
+    printerId: 'p-2',
+    filaments: [{ filamentId: 'f-3', grams: 75 }],
+    printTimeHours: 3,
+    printTimeMinutes: 20,
+    prepTimeMinutes: 10,
+    packagingCost: 3.00,
+    hardwareCost: 0.00,
+    notes: 'Modo vaso (spiralize outer contour), bico 0.6mm.',
+    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'em_producao',
+    isDeductedFromStock: true,
+    selectedPlatformPrice: {
+      platformName: 'Shopee Padrão',
+      price: 49.90,
+      profit: 26.80
+    },
+    breakdown: {
+      filamentCost: 7.88,
+      energyCost: 0.98,
+      depreciationCost: 3.56,
+      maintenanceCost: 6.00,
+      laborCost: 5.83,
+      packagingCost: 3.00,
+      hardwareCost: 0.00,
+      failureRiskCost: 2.15,
+      totalProductionCost: 21.40,
+      recommendedDirectPrice: 49.90,
+      directProfit: 28.50,
+      directMarginPercent: 57.1,
+      totalGrams: 75,
+      totalPrintHours: 3.33
+    }
+  }
+]
+
 // ==========================================
 // MODULE-LEVEL SINGLETON REACTIVE STATE
 // Guarantees all components share the exact same arrays & state
@@ -290,7 +404,7 @@ const filaments = reactive<Filament[]>(JSON.parse(JSON.stringify(DEFAULT_FILAMEN
 const printers = reactive<Printer[]>(JSON.parse(JSON.stringify(DEFAULT_PRINTERS)))
 const settings = reactive<GlobalSettings>({ ...DEFAULT_SETTINGS })
 const platforms = reactive<PlatformFeeConfig[]>(JSON.parse(JSON.stringify(DEFAULT_PLATFORMS)))
-const savedQuotes = reactive<SavedQuote[]>([])
+const savedQuotes = reactive<SavedQuote[]>(JSON.parse(JSON.stringify(DEFAULT_SAVED_QUOTES)))
 const manualSalePrice = reactive<{ [platformId: string]: number }>({})
 
 const activeJob = reactive<PrintJob>({
@@ -352,9 +466,13 @@ const initStore = () => {
     const storedQuotes = localStorage.getItem(STORAGE_KEYS.SAVED_QUOTES)
     if (storedQuotes) {
       const parsed = JSON.parse(storedQuotes)
-      if (Array.isArray(parsed)) {
+      if (Array.isArray(parsed) && parsed.length > 0) {
         savedQuotes.splice(0, savedQuotes.length, ...parsed)
+      } else if (Array.isArray(parsed) && parsed.length === 0) {
+        savedQuotes.splice(0, savedQuotes.length, ...JSON.parse(JSON.stringify(DEFAULT_SAVED_QUOTES)))
       }
+    } else {
+      savedQuotes.splice(0, savedQuotes.length, ...JSON.parse(JSON.stringify(DEFAULT_SAVED_QUOTES)))
     }
 
     // Sync activeJob printer if current is invalid
