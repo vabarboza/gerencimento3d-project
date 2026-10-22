@@ -44,10 +44,18 @@
                 </div>
                 <div>
                   <div style="font-size: 0.875rem; font-weight: 700; color: var(--text-main);">
-                    {{ isParsingFile ? 'Lendo metadados do fatiador...' : lastParsedFile ? `Arquivo Carregado: ${lastParsedFile.fileName}` : 'Importar Arquivo G-code ou .3MF' }}
+                    {{ isParsingFile ? 'Lendo metadados do fatiador...' : lastParsedFile ? `Arquivo: ${lastParsedFile.fileName}` : 'Importar Arquivo G-code ou .3MF' }}
                   </div>
                   <div style="font-size: 0.75rem; color: var(--text-muted);">
-                    {{ lastParsedFile ? `⚡ Detectado: ${lastParsedFile.slicer} • ${lastParsedFile.totalGrams}g • ${lastParsedFile.printTimeHours}h ${lastParsedFile.printTimeMinutes}m` : 'Arraste seu arquivo (Bambu, Orca, Prusa, Cura) para preenchimento automático' }}
+                    <span v-if="lastParsedFile?.isSliced">
+                      ⚡ Detectado: <strong style="color: var(--brand-cyan);">{{ lastParsedFile.slicer }}</strong> • <strong style="color: var(--brand-emerald);">{{ lastParsedFile.totalGrams }}g</strong> • <strong style="color: #fff;">{{ lastParsedFile.printTimeHours }}h {{ lastParsedFile.printTimeMinutes }}m</strong>
+                    </span>
+                    <span v-else-if="lastParsedFile && !lastParsedFile.isSliced" style="color: var(--brand-amber);">
+                      ⚠️ {{ lastParsedFile.warningMessage || 'Modelo 3D carregado. Exporte o arquivo após fatiar para obter tempo e peso automáticos.' }}
+                    </span>
+                    <span v-else>
+                      Arraste seu arquivo fatiado (.3MF ou .gcode do Bambu, Orca, Prusa, Cura, Creality)
+                    </span>
                   </div>
                 </div>
               </div>
@@ -474,21 +482,25 @@ const processFile = async (file: File) => {
     const result = await parseSlicerFile(file)
     lastParsedFile.value = result
 
-    // 1. Title Auto-detection
+    // 1. Title Auto-detection (prefers modelTitle from 3MF metadata, falls back to clean filename)
     const cleanName = file.name
       .replace(/\.(gcode|3mf|zip)$/i, '')
       .replace(/[_-]/g, ' ')
       .trim()
+    const detectedTitle = result.modelTitle || (cleanName.charAt(0).toUpperCase() + cleanName.slice(1))
+
     if (!activeJob.title || activeJob.title === 'Novo Projeto 3D') {
-      activeJob.title = cleanName.charAt(0).toUpperCase() + cleanName.slice(1)
+      activeJob.title = detectedTitle
     }
 
-    // 2. Printing Time
-    activeJob.printTimeHours = result.printTimeHours
-    activeJob.printTimeMinutes = result.printTimeMinutes
+    // 2. Printing Time (only apply if sliced file has valid time)
+    if (result.isSliced || result.printTimeHours > 0 || result.printTimeMinutes > 0) {
+      activeJob.printTimeHours = result.printTimeHours
+      activeJob.printTimeMinutes = result.printTimeMinutes
+    }
 
     // 3. Filaments weight & multi-color AMS support
-    if (result.filamentsGrams && result.filamentsGrams.length > 0) {
+    if (result.filamentsGrams && result.filamentsGrams.length > 0 && result.totalGrams > 0) {
       result.filamentsGrams.forEach((grams, idx) => {
         if (idx < activeJob.filaments.length) {
           activeJob.filaments[idx].grams = grams
